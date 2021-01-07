@@ -401,7 +401,7 @@ public:
 		
 	}
 	virtual bool handleInput(uint64_t keysDown, uint64_t keysHeld, touchPosition touchInput, JoystickPosition leftJoyStick, JoystickPosition rightJoyStick) override {
-		if ((keysHeld & KEY_LSTICK) && (keysHeld & KEY_RSTICK)) {
+		if ((keysHeld & KEY_ZR) && (keysHeld & KEY_R) && (keysHeld & KEY_B)) {
 			EndFPSCounterThread();
 			tsl::goBack();
 			return true;
@@ -416,14 +416,14 @@ public:
     FullOverlay() { }
 
     virtual tsl::elm::Element* createUI() override {
-		auto rootFrame = new tsl::elm::OverlayFrame("Status Monitor", APP_VERSION);
+		auto rootFrame = new tsl::elm::OverlayFrame("状态监控", APP_VERSION);
 
 		auto Status = new tsl::elm::CustomDrawer([](tsl::gfx::Renderer *renderer, u16 x, u16 y, u16 w, u16 h) {
 			
 			//Print strings
 			///CPU
 			if (R_SUCCEEDED(clkrstCheck) || R_SUCCEEDED(pcvCheck)) {
-				renderer->drawString("CPU Usage:", false, 20, 120, 20, renderer->a(0xFFFF));
+				renderer->drawString("CPU使用率：", false, 20, 120, 20, renderer->a(0xFFFF));
 				renderer->drawString(CPU_Hz_c, false, 20, 155, 15, renderer->a(0xFFFF));
 				renderer->drawString(CPU_compressed_c, false, 20, 185, 15, renderer->a(0xFFFF));
 			}
@@ -431,7 +431,7 @@ public:
 			///GPU
 			if (R_SUCCEEDED(clkrstCheck) || R_SUCCEEDED(pcvCheck) || R_SUCCEEDED(nvCheck)) {
 				
-				renderer->drawString("GPU Usage:", false, 20, 285, 20, renderer->a(0xFFFF));
+				renderer->drawString("GPU使用率：", false, 20, 285, 20, renderer->a(0xFFFF));
 				if (R_SUCCEEDED(clkrstCheck) || R_SUCCEEDED(pcvCheck)) renderer->drawString(GPU_Hz_c, false, 20, 320, 15, renderer->a(0xFFFF));
 				if (R_SUCCEEDED(nvCheck)) renderer->drawString(GPU_Load_c, false, 20, 335, 15, renderer->a(0xFFFF));
 				
@@ -440,7 +440,7 @@ public:
 			///RAM
 			if (R_SUCCEEDED(clkrstCheck) || R_SUCCEEDED(pcvCheck) || R_SUCCEEDED(Hinted)) {
 				
-				renderer->drawString("RAM Usage:", false, 20, 375, 20, renderer->a(0xFFFF));
+				renderer->drawString("内存使用率：", false, 20, 375, 20, renderer->a(0xFFFF));
 				if (R_SUCCEEDED(clkrstCheck) || R_SUCCEEDED(pcvCheck)) renderer->drawString(RAM_Hz_c, false, 20, 410, 15, renderer->a(0xFFFF));
 				if (R_SUCCEEDED(Hinted)) {
 					renderer->drawString(RAM_compressed_c, false, 20, 440, 15, renderer->a(0xFFFF));
@@ -450,7 +450,7 @@ public:
 			
 			///Thermal
 			if (R_SUCCEEDED(tsCheck) || R_SUCCEEDED(tcCheck) || R_SUCCEEDED(fanCheck)) {
-				renderer->drawString("Thermal:", false, 20, 540, 20, renderer->a(0xFFFF));
+				renderer->drawString("温度：", false, 20, 540, 20, renderer->a(0xFFFF));
 				if (R_SUCCEEDED(tsCheck)) renderer->drawString(SoCPCB_temperature_c, false, 20, 575, 15, renderer->a(0xFFFF));
 				if (R_SUCCEEDED(tcCheck)) renderer->drawString(skin_temperature_c, false, 20, 605, 15, renderer->a(0xFFFF));
 				if (R_SUCCEEDED(fanCheck)) renderer->drawString(Rotation_SpeedLevel_c, false, 20, 620, 15, renderer->a(0xFFFF));
@@ -462,8 +462,8 @@ public:
 				renderer->drawString(FPS_var_compressed_c, false, 295, 120, 20, renderer->a(0xFFFF));
 			}
 			
-			if (refreshrate == 5) renderer->drawString("Hold Left Stick & Right Stick to Exit\nHold ZR + R + D-Pad Down to slow down refresh", false, 20, 675, 15, renderer->a(0xFFFF));
-			else if (refreshrate == 1) renderer->drawString("Hold Left Stick & Right Stick to Exit\nHold ZR + R + D-Pad Up to speed up refresh", false, 20, 675, 15, renderer->a(0xFFFF));
+			if (refreshrate == 5) renderer->drawString("按住ZR + R + B退出\n按住ZR + R + 方向下减慢刷新速度", false, 20, 675, 15, renderer->a(0xFFFF));
+			else if (refreshrate == 1) renderer->drawString("按住ZR + R + B退出\n按住ZR + R + 方向上加快刷新速度", false, 20, 675, 15, renderer->a(0xFFFF));
 		
 		});
 
@@ -483,19 +483,19 @@ public:
 		
 		//Make stuff ready to print
 		///CPU
-		snprintf(CPU_Hz_c, sizeof CPU_Hz_c, "Frequency: %.1f MHz", (float)CPU_Hz / 1000000);
-		snprintf(CPU_Usage0, sizeof CPU_Usage0, "Core #0: %.2f%s", ((double)systemtickfrequency - (double)idletick0) / (double)systemtickfrequency * 100, "%");
-		snprintf(CPU_Usage1, sizeof CPU_Usage1, "Core #1: %.2f%s", ((double)systemtickfrequency - (double)idletick1) / (double)systemtickfrequency * 100, "%");
-		snprintf(CPU_Usage2, sizeof CPU_Usage2, "Core #2: %.2f%s", ((double)systemtickfrequency - (double)idletick2) / (double)systemtickfrequency * 100, "%");
-		snprintf(CPU_Usage3, sizeof CPU_Usage3, "Core #3: %.2f%s", ((double)systemtickfrequency - (double)idletick3) / (double)systemtickfrequency * 100, "%");
+		snprintf(CPU_Hz_c, sizeof CPU_Hz_c, "频率：%.1f MHz", (float)CPU_Hz / 1000000);
+		snprintf(CPU_Usage0, sizeof CPU_Usage0, "核 #0: %.2f%s", ((double)systemtickfrequency - (double)idletick0) / (double)systemtickfrequency * 100, "%");
+		snprintf(CPU_Usage1, sizeof CPU_Usage1, "核 #1: %.2f%s", ((double)systemtickfrequency - (double)idletick1) / (double)systemtickfrequency * 100, "%");
+		snprintf(CPU_Usage2, sizeof CPU_Usage2, "核 #2: %.2f%s", ((double)systemtickfrequency - (double)idletick2) / (double)systemtickfrequency * 100, "%");
+		snprintf(CPU_Usage3, sizeof CPU_Usage3, "核 #3: %.2f%s", ((double)systemtickfrequency - (double)idletick3) / (double)systemtickfrequency * 100, "%");
 		snprintf(CPU_compressed_c, sizeof CPU_compressed_c, "%s\n%s\n%s\n%s", CPU_Usage0, CPU_Usage1, CPU_Usage2, CPU_Usage3);
 		
 		///GPU
-		snprintf(GPU_Hz_c, sizeof GPU_Hz_c, "Frequency: %.1f MHz", (float)GPU_Hz / 1000000);
-		snprintf(GPU_Load_c, sizeof GPU_Load_c, "Load: %.1f%s", (float)GPU_Load_u / 10, "%");
+		snprintf(GPU_Hz_c, sizeof GPU_Hz_c, "频率：%.1f MHz", (float)GPU_Hz / 1000000);
+		snprintf(GPU_Load_c, sizeof GPU_Load_c, "负载：%.1f%s", (float)GPU_Load_u / 10, "%");
 		
 		///RAM
-		snprintf(RAM_Hz_c, sizeof RAM_Hz_c, "Frequency: %.1f MHz", (float)RAM_Hz / 1000000);
+		snprintf(RAM_Hz_c, sizeof RAM_Hz_c, "频率：%.1f MHz", (float)RAM_Hz / 1000000);
 		float RAM_Total_application_f = (float)RAM_Total_application_u / 1024 / 1024;
 		float RAM_Total_applet_f = (float)RAM_Total_applet_u / 1024 / 1024;
 		float RAM_Total_system_f = (float)RAM_Total_system_u / 1024 / 1024;
@@ -506,11 +506,11 @@ public:
 		float RAM_Used_system_f = (float)RAM_Used_system_u / 1024 / 1024;
 		float RAM_Used_systemunsafe_f = (float)RAM_Used_systemunsafe_u / 1024 / 1024;
 		float RAM_Used_all_f = RAM_Used_application_f + RAM_Used_applet_f + RAM_Used_system_f + RAM_Used_systemunsafe_f;
-		snprintf(RAM_all_c, sizeof RAM_all_c, "Total:");
-		snprintf(RAM_application_c, sizeof RAM_application_c, "Application:");
-		snprintf(RAM_applet_c, sizeof RAM_applet_c, "Applet:");
-		snprintf(RAM_system_c, sizeof RAM_system_c, "System:");
-		snprintf(RAM_systemunsafe_c, sizeof RAM_systemunsafe_c, "System Unsafe:");
+		snprintf(RAM_all_c, sizeof RAM_all_c, "总计：");
+		snprintf(RAM_application_c, sizeof RAM_application_c, "应用：");
+		snprintf(RAM_applet_c, sizeof RAM_applet_c, "小程序：");
+		snprintf(RAM_system_c, sizeof RAM_system_c, "系统：");
+		snprintf(RAM_systemunsafe_c, sizeof RAM_systemunsafe_c, "系统保留：");
 		snprintf(RAM_compressed_c, sizeof RAM_compressed_c, "%s\n%s\n%s\n%s\n%s", RAM_all_c, RAM_application_c, RAM_applet_c, RAM_system_c, RAM_systemunsafe_c);
 		snprintf(RAM_all_c, sizeof RAM_all_c, "%4.2f / %4.2f MB", RAM_Used_all_f, RAM_Total_all_f);
 		snprintf(RAM_application_c, sizeof RAM_application_c, "%4.2f / %4.2f MB", RAM_Used_application_f, RAM_Total_application_f);
@@ -520,19 +520,19 @@ public:
 		snprintf(RAM_var_compressed_c, sizeof RAM_var_compressed_c, "%s\n%s\n%s\n%s\n%s", RAM_all_c, RAM_application_c, RAM_applet_c, RAM_system_c, RAM_systemunsafe_c);
 		
 		///Thermal
-		snprintf(SoCPCB_temperature_c, sizeof SoCPCB_temperature_c, "SoC: %2.2f \u00B0C\nPCB: %2.2f \u00B0C", (float)SoC_temperaturemiliC / 1000, (float)PCB_temperaturemiliC / 1000);
-		snprintf(skin_temperature_c, sizeof skin_temperature_c, "Skin: %2.2f \u00B0C", (float)skin_temperaturemiliC / 1000);
-		snprintf(Rotation_SpeedLevel_c, sizeof Rotation_SpeedLevel_c, "Fan: %2.2f%s", Rotation_SpeedLevel_f * 100, "%");
+		snprintf(SoCPCB_temperature_c, sizeof SoCPCB_temperature_c, "芯片：%2.2f \u00B0C\nPCB: %2.2f \u00B0C", (float)SoC_temperaturemiliC / 1000, (float)PCB_temperaturemiliC / 1000);
+		snprintf(skin_temperature_c, sizeof skin_temperature_c, "表面：%2.2f \u00B0C", (float)skin_temperaturemiliC / 1000);
+		snprintf(Rotation_SpeedLevel_c, sizeof Rotation_SpeedLevel_c, "风扇：%2.2f%s", Rotation_SpeedLevel_f * 100, "%");
 		
 		///FPS
-		snprintf(FPS_c, sizeof FPS_c, "PFPS:"); //Pushed Frames Per Second
-		snprintf(FPSavg_c, sizeof FPSavg_c, "FPS:"); //Frames Per Second calculated from averaged frametime 
+		snprintf(FPS_c, sizeof FPS_c, "压入帧率："); //Pushed Frames Per Second
+		snprintf(FPSavg_c, sizeof FPSavg_c, "帧率："); //Frames Per Second calculated from averaged frametime 
 		snprintf(FPS_compressed_c, sizeof FPS_compressed_c, "%s\n%s", FPS_c, FPSavg_c);
 		snprintf(FPS_var_compressed_c, sizeof FPS_var_compressed_c, "%u\n%2.2f", FPS, FPSavg);
 		
 	}
 	virtual bool handleInput(uint64_t keysDown, uint64_t keysHeld, touchPosition touchInput, JoystickPosition leftJoyStick, JoystickPosition rightJoyStick) override {
-		if ((keysHeld & KEY_LSTICK) && (keysHeld & KEY_RSTICK)) {
+		if ((keysHeld & KEY_ZR) && (keysHeld & KEY_R) && (keysHeld & KEY_B)) {
 			CloseThreads();
 			tsl::goBack();
 			return true;
@@ -557,8 +557,8 @@ public:
 			
 			//Print strings
 			///CPU
-			if (GameRunning == true) renderer->drawString("CPU\nGPU\nRAM\nTEMP\nFAN\nPFPS\nFPS", false, 0, 15, 15, renderer->a(0xFFFF));
-			else renderer->drawString("CPU\nGPU\nRAM\nTEMP\nFAN", false, 0, 15, 15, renderer->a(0xFFFF));
+			if (GameRunning == true) renderer->drawString("CPU\nGPU\n内存\n温度\n风扇\n压入帧率\n帧率", false, 0, 15, 15, renderer->a(0xFFFF));
+			else renderer->drawString("CPU\nGPU\n内存\n温度\n风扇", false, 0, 15, 15, renderer->a(0xFFFF));
 			
 			///GPU
 			renderer->drawString(Variables, false, 60, 15, 15, renderer->a(0xFFFF));
@@ -588,10 +588,10 @@ public:
 		snprintf(CPU_Usage2, sizeof CPU_Usage2, "%.0f%s", percent, "%");
 		percent = ((double)systemtickfrequency - (double)idletick3) / (double)systemtickfrequency * 100;
 		snprintf(CPU_Usage3, sizeof CPU_Usage3, "%.0f%s", percent, "%");
-		snprintf(CPU_compressed_c, sizeof CPU_compressed_c, "[%s,%s,%s,%s]@%.1f", CPU_Usage0, CPU_Usage1, CPU_Usage2, CPU_Usage3, (float)CPU_Hz / 1000000);
+		snprintf(CPU_compressed_c, sizeof CPU_compressed_c, "[%s %s %s %s] @%.1f", CPU_Usage0, CPU_Usage1, CPU_Usage2, CPU_Usage3, (float)CPU_Hz / 1000000);
 		
 		///GPU
-		snprintf(GPU_Load_c, sizeof GPU_Load_c, "%.1f%s@%.1f", (float)GPU_Load_u / 10, "%", (float)GPU_Hz / 1000000);
+		snprintf(GPU_Load_c, sizeof GPU_Load_c, "%.1f%s @%.1f", (float)GPU_Load_u / 10, "%", (float)GPU_Hz / 1000000);
 		
 		///RAM
 		float RAM_Total_application_f = (float)RAM_Total_application_u / 1024 / 1024;
@@ -605,10 +605,10 @@ public:
 		float RAM_Used_systemunsafe_f = (float)RAM_Used_systemunsafe_u / 1024 / 1024;
 		float RAM_Used_all_f = RAM_Used_application_f + RAM_Used_applet_f + RAM_Used_system_f + RAM_Used_systemunsafe_f;
 		snprintf(RAM_all_c, sizeof RAM_all_c, "%.0f/%.0fMB", RAM_Used_all_f, RAM_Total_all_f);
-		snprintf(RAM_var_compressed_c, sizeof RAM_var_compressed_c, "%s@%.1f", RAM_all_c, (float)RAM_Hz / 1000000);
+		snprintf(RAM_var_compressed_c, sizeof RAM_var_compressed_c, "%s @%.1f", RAM_all_c, (float)RAM_Hz / 1000000);
 		
 		///Thermal
-		snprintf(skin_temperature_c, sizeof skin_temperature_c, "%2.1f\u00B0C/%2.1f\u00B0C/%2.1f\u00B0C", (float)SoC_temperaturemiliC / 1000, (float)PCB_temperaturemiliC / 1000, (float)skin_temperaturemiliC / 1000);
+		snprintf(skin_temperature_c, sizeof skin_temperature_c, "%2.1f\u00B0C %2.1f\u00B0C %2.1f\u00B0C", (float)SoC_temperaturemiliC / 1000, (float)PCB_temperaturemiliC / 1000, (float)skin_temperaturemiliC / 1000);
 		snprintf(Rotation_SpeedLevel_c, sizeof Rotation_SpeedLevel_c, "%2.2f%s", Rotation_SpeedLevel_f * 100, "%");
 		
 		///FPS
@@ -622,7 +622,7 @@ public:
 
 	}
 	virtual bool handleInput(uint64_t keysDown, uint64_t keysHeld, touchPosition touchInput, JoystickPosition leftJoyStick, JoystickPosition rightJoyStick) override {
-		if ((keysHeld & KEY_LSTICK) && (keysHeld & KEY_RSTICK)) {
+		if ((keysHeld & KEY_ZR) && (keysHeld & KEY_R) && (keysHeld & KEY_B))  {
 			CloseThreads();
 			tsl::goBack();
 			return true;
@@ -637,10 +637,10 @@ public:
     MainMenu() { }
 
     virtual tsl::elm::Element* createUI() override {
-		auto rootFrame = new tsl::elm::OverlayFrame("Status Monitor", APP_VERSION);
+		auto rootFrame = new tsl::elm::OverlayFrame("状态监控", APP_VERSION);
 		auto list = new tsl::elm::List();
 		
-		auto Full = new tsl::elm::ListItem("Full");
+		auto Full = new tsl::elm::ListItem("完整窗口");
 		Full->setClickListener([](uint64_t keys) {
 			if (keys & KEY_A) {
 				StartThreads();
@@ -653,7 +653,7 @@ public:
 			return false;
 		});
 		list->addItem(Full);
-		auto Mini = new tsl::elm::ListItem("Mini");
+		auto Mini = new tsl::elm::ListItem("迷你窗口");
 		Mini->setClickListener([](uint64_t keys) {
 			if (keys & KEY_A) {
 				StartThreads();
@@ -669,7 +669,7 @@ public:
 		});
 		list->addItem(Mini);
 		if (SaltySD == true) {
-			auto comFPS = new tsl::elm::ListItem("FPS Counter");
+			auto comFPS = new tsl::elm::ListItem("帧率计数器");
 			comFPS->setClickListener([](uint64_t keys) {
 				if (keys & KEY_A) {
 					StartFPSCounterThread();
