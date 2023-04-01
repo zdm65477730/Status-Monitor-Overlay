@@ -2292,7 +2292,6 @@ class MonitorOverlay : public tsl::Overlay {
    public:
     virtual void initServices() override {
         fsdevMountSdmc();
-<<<<<<< HEAD
         std::string jsonStr = R"(
             {
                 "PluginName": "Zing",
@@ -2315,42 +2314,6 @@ class MonitorOverlay : public tsl::Overlay {
                 "UpdateBookmarkPressKeyForComboCountMainMenuCustomDrawerText": "Press key for combo count = %d\n",
                 "UpdateEditCheatValueMainMenuCustomDrawerText": "\uE092\uE093\uE0A4\uE0A5 \uE0A0 Select, \uE0A1 Backspace, \uE045 Enter, \uE0A2 Cancel\n",
                 "UpdateShowOutlineCursorMainMenuCustomDrawerText": "Cheats outline \uE092\uE093 \uE0A0 Select\n"
-=======
-        InitTrans();
-
-        //Initialize services
-        tsl::hlp::doWithSmSession([this] {
-            if (hosversionAtLeast(8,0,0)) clkrstCheck = clkrstInitialize();
-            else pcvCheck = pcvInitialize();
-
-            tsCheck = tsInitialize();
-            if (hosversionAtLeast(5,0,0)) tcCheck = tcInitialize();
-
-            if (R_SUCCEEDED(fanInitialize())) {
-                if (hosversionAtLeast(7,0,0)) fanCheck = fanOpenController(&g_ICon, 0x3D000001);
-                else fanCheck = fanOpenController(&g_ICon, 1);
-            }
-
-            if (R_SUCCEEDED(nvInitialize())) nvCheck = nvOpen(&fd, "/dev/nvhost-ctrl-gpu");
-            if (R_SUCCEEDED(nvMapInit())) nvdecCheck = nvChannelCreate(&nvdecChannel, "/dev/nvhost-nvdec");
-
-            if (R_SUCCEEDED(audsnoopInitialize())) audsnoopCheck = audsnoopEnableDspUsageMeasurement();
-
-            Nifm_profile = (NifmNetworkProfileData_new*)malloc(sizeof(NifmNetworkProfileData_new));
-
-            psmCheck = psmInitialize();
-            if (R_SUCCEEDED(psmCheck)) psmService = psmGetServiceSession();
-
-            SaltySD = CheckPort();
-
-            if (SaltySD) {
-                LoadSharedMemory();
-                //Assign NX-FPS to default core
-                threadCreate(&t6, CheckIfGameRunning, NULL, NULL, 0x1000, 0x38, -2);
-
-                //Start NX-FPS detection
-                threadStart(&t6);
->>>>>>> c7cd145 (min update)
             }
         )";
         std::string lanPath = std::string("sdmc:/switch/.overlays/lang/") + APPTITLE + "/";
