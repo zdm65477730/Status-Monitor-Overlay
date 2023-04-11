@@ -1,10 +1,10 @@
 #include "config.hpp"
 #include <sys/stat.h>
 
-static Config::config_data_t configData;
+static Config::config_data_t configData = {};
 
 void Config::readConfig() {
-    memset(&configData, 0x00, sizeof(config_data_t));
+    configData = {};
     mkdir("/switch", 0777);
     mkdir(EDIZON_DIR "", 0777);
     snprintf(configData.edizon_dir, sizeof configData.edizon_dir, EDIZON_DIR);
@@ -14,7 +14,7 @@ void Config::readConfig() {
         fclose(configFile);
 
         if (strcmp(configData.magic, "EDZOCFG") != 0) {
-        memset(&configData, 0x00, sizeof(config_data_t));
+        configData = {};
         Config::writeConfig();
         }
     } else
