@@ -209,7 +209,16 @@ bool init_se_tools() {
     if (!dmnt_present) return false;
 
     m_debugger = new Debugger();
-    dmntchtForceOpenCheatProcess();
+    uint64_t PID = 0;
+    int64_t timeout = 1000'000'000;
+    while (timeout) {
+        if (R_SUCCEEDED(pmdmntGetApplicationProcessId(&PID))) {
+            dmntchtForceOpenCheatProcess();
+            break;
+        }
+        timeout -= 50'000'000;
+        svcSleepThread(50'000'000);
+    }
     dmntchtHasCheatProcess(&(m_debugger->m_dmnt));
     if (m_debugger->m_dmnt) {
         dmntchtGetCheatProcessMetadata(&metadata);
@@ -1098,7 +1107,6 @@ void getcheats() {
             dmntchtGetCheats(m_cheats, m_cheatCnt, 0, &m_cheatCnt);
         } else {
             CheatsLabelsStr[0] = 0;
-            CheatsCursor[0] = 0;
             CheatsEnableStr[0] = 0;
             snprintf(CheatsEnableStr, sizeof CheatsEnableStr, "NoAvailableCheatsErrorGetCheatsCheatsEnableStrText"_tr.c_str());
             cheat_outline_entry_t outline_entry = {};
@@ -1322,11 +1330,11 @@ public:
     BookmarkOverlay() {}
 
     virtual tsl::elm::Element *createUI() override {
-        memset(BookmarkLabels, 0, sizeof(BookmarkLabels));
-        memset(Variables, 0, sizeof(Variables));
-        memset(CheatsLabelsStr, 0, sizeof(CheatsLabelsStr));
-        memset(Cursor, 0, sizeof(Cursor));
-        memset(MultiplierStr, 0, sizeof(MultiplierStr));
+        std::memset(BookmarkLabels, 0, sizeof(BookmarkLabels));
+        std::memset(Variables, 0, sizeof(Variables));
+        std::memset(CheatsLabelsStr, 0, sizeof(CheatsLabelsStr));
+        std::memset(Cursor, 0, sizeof(Cursor));
+        std::memset(MultiplierStr, 0, sizeof(MultiplierStr));
         auto rootFrame = new tsl::elm::OverlayFrame("", "");
         auto Status = new tsl::elm::CustomDrawer([](tsl::gfx::Renderer *renderer, u16 x, u16 y, u16 w, u16 h) {
             std::pair<s32, s32> extent1;
@@ -1345,6 +1353,9 @@ public:
     }
 
     virtual void update() override {
+        if (!dmnt_present || !m_debugger)
+            return;
+
         if (m_on_show) {
             tsl::hlp::requestForeground(false);
             m_on_show = false;
@@ -1494,26 +1505,41 @@ public:
 
     virtual tsl::elm::Element *createUI() override {
         tsl::elm::OverlayFrame *rootFrame = nullptr;
-        if (dmnt_present && m_debugger && m_debugger->m_dmnt) {
-            TeslaFPS = 50;
-            IsFrameBackground = false;
-            tsl::hlp::requestForeground(true);
-            FullMode = false;
-            m_on_show = true;
-            refresh_cheats = true;
-            m_cheatlist_offset = m_cheatlist_offset_save;
-            if (m_outline.size() <= 1) m_showALlCheats = true;
-            rootFrame = new tsl::elm::OverlayFrame("", "");
-            auto Status = new tsl::elm::CustomDrawer([](tsl::gfx::Renderer *renderer, u16 x, u16 y, u16 w, u16 h) {
-                renderer->drawRect(0, 0, tsl::cfg::FramebufferWidth , tsl::cfg::FramebufferHeight, a(0x7111));
-                renderer->m_maxY = 0;
-                renderer->drawString(BookmarkLabels, false, 65, fontsize, fontsize, renderer->a(0xFFFF));
-                renderer->drawString(Variables, false, 210, fontsize, fontsize, renderer->a(0xFFFF));
-                renderer->drawString(Cursor, false, 5, fontsize, fontsize, renderer->a(0xFFFF));
-                renderer->drawString(MultiplierStr, false, 25, fontsize, fontsize, renderer->a(0xFFFF));
-                m_NUM_cheats = std::min(m_displayed_cheat_lines + (s32)(tsl::cfg::FramebufferHeight - renderer->m_maxY) / (fontsize + 3), (u32)MAX_NUM_cheats);
-            });
-            rootFrame->setContent(Status);
+        if (dmnt_present && m_debugger) {
+            dmntchtHasCheatProcess(&(m_debugger->m_dmnt));
+            if (m_debugger->m_dmnt) {
+                TeslaFPS = 50;
+                IsFrameBackground = false;
+                tsl::hlp::requestForeground(true);
+                FullMode = false;
+                m_on_show = true;
+                refresh_cheats = true;
+                m_cheatlist_offset = m_cheatlist_offset_save;
+                if (m_outline.size() <= 1) m_showALlCheats = true;
+                rootFrame = new tsl::elm::OverlayFrame("", "");
+                auto Status = new tsl::elm::CustomDrawer([](tsl::gfx::Renderer *renderer, u16 x, u16 y, u16 w, u16 h) {
+                    renderer->drawRect(0, 0, tsl::cfg::FramebufferWidth , tsl::cfg::FramebufferHeight, a(0x7111));
+                    renderer->m_maxY = 0;
+                    renderer->drawString(BookmarkLabels, false, 65, fontsize, fontsize, renderer->a(0xFFFF));
+                    renderer->drawString(Variables, false, 210, fontsize, fontsize, renderer->a(0xFFFF));
+                    renderer->drawString(Cursor, false, 5, fontsize, fontsize, renderer->a(0xFFFF));
+                    renderer->drawString(MultiplierStr, false, 25, fontsize, fontsize, renderer->a(0xFFFF));
+                    m_NUM_cheats = std::min(m_displayed_cheat_lines + (s32)(tsl::cfg::FramebufferHeight - renderer->m_maxY) / (fontsize + 3), (u32)MAX_NUM_cheats);
+                });
+                rootFrame->setContent(Status);
+            } else {
+                if (TeslaFPS != 60) {
+                    FullMode = true;
+                    tsl::hlp::requestForeground(true);
+                    TeslaFPS = 60;
+                    IsFrameBackground = true;
+                }
+                rootFrame = new tsl::elm::OverlayFrame("PluginName"_tr, VERSION);
+                auto list = new tsl::elm::List();
+                auto NoGame = new tsl::elm::ListItem("GameNotRunningMainMenuListItemText"_tr);
+                list->addItem(NoGame);
+                rootFrame->setContent(list);
+            }
         } else {
             if (TeslaFPS != 60) {
                 FullMode = true;
@@ -1532,10 +1558,17 @@ public:
     }
 
     virtual void update() override {
-        if (!dmnt_present || !m_debugger || !m_debugger->m_dmnt)
+        if (!dmnt_present || !m_debugger)
             return;
 
-        if (m_cursor_on_bookmark){
+        dmntchtHasCheatProcess(&(m_debugger->m_dmnt));
+        if (!m_debugger->m_dmnt)
+            return;
+
+        if (m_cheatCnt == 0) {
+            snprintf(Cursor, sizeof Cursor, "UpdateCursorNoCheatsMainMenuCustomDrawerText"_tr.c_str(),
+                    m_titleName.c_str(), m_versionString.c_str(), metadata.process_id, metadata.title_id, build_id[0], build_id[1], build_id[2], build_id[3], build_id[4], build_id[5], build_id[6], build_id[7]);
+        } else if (m_cursor_on_bookmark) {
             snprintf(Cursor, sizeof Cursor, "UpdateCursorOnBookmarkMainMenuCustomDrawerText"_tr.c_str(),
                     m_titleName.c_str(), m_versionString.c_str(), metadata.process_id, metadata.title_id, build_id[0], build_id[1], build_id[2], build_id[3], build_id[4], build_id[5], build_id[6], build_id[7]);
         } else {
@@ -1665,13 +1698,21 @@ public:
         if (m_AttributeDumpBookmark->size() == 0) m_cursor_on_bookmark = false;
         m_show_only_enabled_cheats = false;
         getcheats();
-        strncat(BookmarkLabels, CheatsLabelsStr, sizeof BookmarkLabels-1);
+        strncat(BookmarkLabels, CheatsLabelsStr, sizeof BookmarkLabels - 1);
         strncat(Cursor, CheatsCursor, sizeof Cursor - 1);
-        strncat(MultiplierStr, CheatsEnableStr, sizeof MultiplierStr-1);
+        strncat(MultiplierStr, CheatsEnableStr, sizeof MultiplierStr - 1);
     }
 
     virtual bool handleInput(u64 keysDown, u64 keysHeld, const HidTouchState &touchPos, HidAnalogStickState leftJoyStick, HidAnalogStickState rightJoyStick) override {
-        if (!dmnt_present || !m_debugger || !m_debugger->m_dmnt) {
+        if (!dmnt_present || !m_debugger) {
+            if (keysDown & HidNpadButton_B) {
+                tsl::goBack();
+            }
+            return true;
+        }
+
+        dmntchtHasCheatProcess(&(m_debugger->m_dmnt));
+        if (!m_debugger->m_dmnt) {
             if (keysDown & HidNpadButton_B) {
                 tsl::goBack();
             }
@@ -2264,7 +2305,9 @@ class MonitorOverlay : public tsl::Overlay {
                 "EnabledCheatsGetCheatsCheatsLabelsStrText": "Enabled Cheats %d\n",
                 "ShowTotalInfoGetCheatsCheatsCursorText": "Cheats %d/%ld opcode = %d Total opcode = %d/%d\n",
                 "UpdateStatusTitleStrBookmarkOverlayCustomDrawerText": "\uE0A6+\uE0A4/\uE0A5 Font size  \uE0A6+\uE0A3 Edit  \uE0C4+\uE0C5 Exit\n",
+                "GameNotRunningMainMenuListItemText": "Game not running",
                 "NoDmntMainMenuListItemText": "Dmnt not attached",
+                "UpdateCursorNoCheatsMainMenuCustomDrawerText": "%s v%s\nPID: %03ld TID: %016lX BID: %02X%02X%02X%02X%02X%02X%02X%02X\n\n\n\n",
                 "UpdateCursorOnBookmarkMainMenuCustomDrawerText": "%s v%s\nPID: %03ld TID: %016lX BID: %02X%02X%02X%02X%02X%02X%02X%02X\n\uE092\uE093\uE091\uE090 nav\n\uE0A4 \uE0A5 Change  \uE0A0 Edit  \uE0A1 Exit  \uE0A6+\uE0A4/\uE0A5 Font size  \uE0B4 Deletet\n\uE0A6+\uE04E Toggle show all cheats  \uE0A3 Find next enabled cheat\n",
                 "UpdateCursorNotOnBookmarkMainMenuCustomDrawerText": "%s v%s\nPID: %03ld TID: %016lX BID: %02X%02X%02X%02X%02X%02X%02X%02X\n\uE092\uE093\uE091\uE090\uE0A4\uE0A5 nav\n\uE0A0 Toggle  \uE0B3 Add bookmark  \uE0B4 Delete bookmark  \uE0A1 Exit\n\n",
                 "UpdateBookmarkPressKeyForComboCountMainMenuCustomDrawerText": "Press key for combo count = %d\n",
@@ -2277,7 +2320,7 @@ class MonitorOverlay : public tsl::Overlay {
             tsl::tr::InitTrans(lanPath, jsonStr);
         });
         dmntchtInitialize();
-        rc = nsInitialize();
+        nsInitialize();
         if (init_se_tools()) {
             load_breeze_toggle();
             load_breeze_action();
