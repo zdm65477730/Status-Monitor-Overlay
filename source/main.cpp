@@ -211,13 +211,14 @@ bool init_se_tools() {
     m_debugger = new Debugger();
     uint64_t PID = 0;
     int64_t timeout = 1000'000'000;
+    int64_t interval = 10'000'000;
     while (timeout) {
         if (R_SUCCEEDED(pmdmntGetApplicationProcessId(&PID))) {
             dmntchtForceOpenCheatProcess();
             break;
         }
-        timeout -= 50'000'000;
-        svcSleepThread(50'000'000);
+        timeout -= interval;
+        svcSleepThread(interval);
     }
     dmntchtHasCheatProcess(&(m_debugger->m_dmnt));
     if (m_debugger->m_dmnt) {
