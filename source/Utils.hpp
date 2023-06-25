@@ -242,13 +242,13 @@ void CheckButtons(void*) {
 	while (!threadexit) {
 		padUpdate(&pad);
 		kHeld = padGetButtons(&pad);
-		if ((kHeld & KEY_ZR) && (kHeld & KEY_R)) {
-			if (kHeld & KEY_DDOWN) {
+		if ((kHeld & HidNpadButton_ZR) && (kHeld & HidNpadButton_R)) {
+			if (kHeld & HidNpadButton_Down) {
 				TeslaFPS = 1;
 				refreshrate = 1;
 				systemtickfrequency = 19200000;
 			}
-			else if (kHeld & KEY_DUP) {
+			else if (kHeld & HidNpadButton_Up) {
 				TeslaFPS = 5;
 				refreshrate = 5;
 				systemtickfrequency = 3840000;
