@@ -64,11 +64,11 @@ typedef struct
   const u8 *data;
 } glyph_t;
 
-typedef struct
+typedef struct PACKED
 {
   u64 addr;
   u8 type;
-} PACKED ramAddr_t;
+} ramAddr_t;
 
 typedef union {
   u8 _u8;
