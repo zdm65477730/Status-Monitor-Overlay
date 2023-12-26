@@ -1466,6 +1466,7 @@ public:
             IsFrameBackground = false;
             tsl::hlp::requestForeground(true);
             FullMode = false;
+            deactivateOriginalFooter = true;
             tsl::goBack();
             return true;
         }
@@ -1475,6 +1476,7 @@ public:
             IsFrameBackground = false;
             tsl::hlp::requestForeground(true);
             FullMode = false;
+            deactivateOriginalFooter = true;
             dmntchtPauseCheatProcess();
             tsl::goBack();
             return true;
@@ -1513,6 +1515,7 @@ public:
                 IsFrameBackground = false;
                 tsl::hlp::requestForeground(true);
                 FullMode = false;
+                deactivateOriginalFooter = true;
                 m_on_show = true;
                 refresh_cheats = true;
                 m_cheatlist_offset = m_cheatlist_offset_save;
@@ -1533,6 +1536,7 @@ public:
                     FullMode = true;
                     tsl::hlp::requestForeground(true);
                     TeslaFPS = 60;
+                    deactivateOriginalFooter = false;
                     IsFrameBackground = true;
                 }
                 rootFrame = new tsl::elm::OverlayFrame("PluginName"_tr, VERSION);
@@ -1546,6 +1550,7 @@ public:
                 FullMode = true;
                 tsl::hlp::requestForeground(true);
                 TeslaFPS = 60;
+                deactivateOriginalFooter = false;
                 IsFrameBackground = true;
             }
             rootFrame = new tsl::elm::OverlayFrame("PluginName"_tr, VERSION);
@@ -1888,6 +1893,7 @@ public:
             IsFrameBackground = false;
             tsl::hlp::requestForeground(false);
             FullMode = false;
+            deactivateOriginalFooter = true;
             refresh_cheats = true;
             tsl::changeTo<BookmarkOverlay>();
             dmntchtResumeCheatProcess();
@@ -2004,6 +2010,7 @@ public:
             FullMode = true;
             tsl::hlp::requestForeground(true);
             TeslaFPS = 60;
+            deactivateOriginalFooter = false;
             IsFrameBackground = true;
             dmntchtResumeCheatProcess();
             tsl::goBack();
