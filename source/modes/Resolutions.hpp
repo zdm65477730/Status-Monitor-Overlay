@@ -22,7 +22,7 @@ public:
 		StartFPSCounterThread();
 		deactivateOriginalFooter = true;
 		tsl::hlp::requestForeground(false);
-		alphabackground = 0x0;
+		IsFrameBackground = false;
 		FullMode = false;
 		TeslaFPS = settings.refreshRate;
 	}
@@ -31,7 +31,7 @@ public:
 		EndFPSCounterThread();
 		deactivateOriginalFooter = false;
 		tsl::hlp::requestForeground(true);
-		alphabackground = 0xD;
+		IsFrameBackground = true;
 		FullMode = true;
 		if (settings.setPos)
 			tsl::gfx::Renderer::getRenderer().setLayerPos(0, 0);
@@ -44,7 +44,7 @@ public:
 
     virtual tsl::elm::Element* createUI() override {
 		rootFrame = new tsl::elm::OverlayFrame("", "");
-		
+
 		auto Status = new tsl::elm::CustomDrawer([this](tsl::gfx::Renderer *renderer, u16 x, u16 y, u16 w, u16 h) {
 			int base_y = 0;
 			int base_x = 0;
@@ -76,15 +76,15 @@ public:
 				case 8:
 					base_x = 96;
 					base_y = 520;
-					break;	
+					break;
 			}
 
 			if (gameStart && NxFps -> API == 1) {
 				renderer->drawRect(base_x, base_y, 360, 200, a(settings.backgroundColor));
 
-				renderer->drawString("Depth:", false, base_x+20, base_y+20, 20, renderer->a(settings.catColor));
+				renderer->drawString("DepthResolutionsOverlayCustomDrawerText"_tr.c_str(), false, base_x+20, base_y+20, 20, renderer->a(settings.catColor));
 				renderer->drawString(Resolutions_c, false, base_x+20, base_y+55, 18, renderer->a(settings.textColor));
-				renderer->drawString("Viewport:", false, base_x+180, base_y+20, 20, renderer->a(settings.catColor));
+				renderer->drawString("ViewportResolutionsOverlayCustomDrawerText"_tr.c_str(), false, base_x+180, base_y+20, 20, renderer->a(settings.catColor));
 				renderer->drawString(Resolutions2_c, false, base_x+180, base_y+55, 18, renderer->a(settings.textColor));
 			}
 			else {
@@ -98,11 +98,11 @@ public:
 				}
 				if (gameStart && NxFps -> API > 1) {
 					renderer->drawRect(base_x, base_y, 360, 28, a(settings.backgroundColor));
-					renderer->drawString("Game doesn't use NVN, it's incompatible.", false, base_x, base_y+20, 18, renderer->a(0xF00F));				
+					renderer->drawString("GameIncompatibleWithNVNResolutionsOverlayCustomDrawerText"_tr.c_str(), false, base_x, base_y+20, 18, renderer->a(0xF00F));
 				}
 				else {
 					renderer->drawRect(base_x, base_y, 360, 28, a(settings.backgroundColor));
-					renderer->drawString("Game is not running or it's incompatible.", false, base_x, base_y+20, 18, renderer->a(0xF00F));
+					renderer->drawString("GamaNotRunningOrIncompatibleResolutionsOverlayCustomDrawerText"_tr.c_str(), false, base_x, base_y+20, 18, renderer->a(0xF00F));
 				}
 			}
 		});
@@ -172,7 +172,7 @@ public:
 			resolutionLookup = false;
 		}
 	}
-	virtual bool handleInput(uint64_t keysDown, uint64_t keysHeld, touchPosition touchInput, JoystickPosition leftJoyStick, JoystickPosition rightJoyStick) override {
+	virtual bool handleInput(uint64_t keysDown, uint64_t keysHeld, const HidTouchState &touchPos, HidAnalogStickState leftJoyStick, HidAnalogStickState rightJoyStick) override {
 		if (isKeyComboPressed(keysHeld, keysDown, mappedButtons)) {
 			tsl::goBack();
 			return true;

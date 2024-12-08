@@ -6,8 +6,10 @@ private:
 	FpsGraphSettings settings;
 public:
 	bool isStarted = false;
-    com_FPSGraph() { 
-		GetConfigSettings(&settings);
+	com_FPSGraph() {
+		tsl::hlp::doWithSDCardHandle([this] {
+			GetConfigSettings(&settings);
+		});
 		switch(settings.setPos) {
 			case 1:
 			case 4:
@@ -27,7 +29,7 @@ public:
 			svcSleepThread(100'000);
 			SaltySD_Term();
 		}
-		alphabackground = 0x0;
+		IsFrameBackground = false;
 		tsl::hlp::requestForeground(false);
 		FullMode = false;
 		TeslaFPS = settings.refreshRate;
@@ -40,7 +42,7 @@ public:
 			tsl::gfx::Renderer::getRenderer().setLayerPos(0, 0);
 		FullMode = true;
 		tsl::hlp::requestForeground(true);
-		alphabackground = 0xD;
+		IsFrameBackground = true;
 		deactivateOriginalFooter = false;
 	}
 
@@ -68,11 +70,10 @@ public:
 	s16 y_60FPS = rectangle_y;
 	bool isAbove = false;
 
-    virtual tsl::elm::Element* createUI() override {
+	virtual tsl::elm::Element* createUI() override {
 		rootFrame = new tsl::elm::OverlayFrame("", "");
 
 		auto Status = new tsl::elm::CustomDrawer([this](tsl::gfx::Renderer *renderer, u16 x, u16 y, u16 w, u16 h) {
-
 			if (refreshRate && refreshRate < 80) {
 				rectangle_height = refreshRate;
 				rectangle_range_max = refreshRate;
@@ -81,7 +82,7 @@ public:
 				y_30FPS = rectangle_y+(rectangle_height / 2);
 				range = std::abs(rectangle_range_max - rectangle_range_min) + 1;
 			};
-			
+
 			switch(settings.setPos) {
 				case 1:
 					base_x = 224 - ((rectangle_width + 21) / 2);
@@ -128,9 +129,9 @@ public:
 				}
 				else if (y_on_range > range) {
 					isAbove = true;
-					y_on_range = range; 
+					y_on_range = range;
 				}
-				
+
 				s16 y = rectangle_y + static_cast<s16>(std::lround((float)rectangle_height * ((float)(range - y_on_range) / (float)range))); // 320 + (80 * ((61 - 61)/61)) = 320
 				auto colour = renderer->a(settings.mainLineColor);
 				if (y == y_old && !isAbove && readings[last_element].zero_rounded) {
@@ -145,11 +146,11 @@ public:
 				}
 				/*
 				else if (y - y_old > 0) {
-					if (y_old + 1 <= rectangle_y+rectangle_height) 
+					if (y_old + 1 <= rectangle_y+rectangle_height)
 						y_old += 1;
 				}
 				else if (y - y_old < 0) {
-					if (y_old - 1 >= rectangle_y) 
+					if (y_old - 1 >= rectangle_y)
 						y_old -= 1;
 				}
 				*/
@@ -189,10 +190,10 @@ public:
 		else {
 			readings.clear();
 			readings.shrink_to_fit();
-		}
-		
+		}	
 	}
-	virtual bool handleInput(uint64_t keysDown, uint64_t keysHeld, touchPosition touchInput, JoystickPosition leftJoyStick, JoystickPosition rightJoyStick) override {
+
+	virtual bool handleInput(uint64_t keysDown, uint64_t keysHeld, const HidTouchState &touchPos, HidAnalogStickState leftJoyStick, HidAnalogStickState rightJoyStick) override {
 		if (isKeyComboPressed(keysHeld, keysDown, mappedButtons)) {
 			TeslaFPS = 60;
 			tsl::goBack();
