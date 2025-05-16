@@ -27,7 +27,7 @@ jobs:
           make install -j$(nproc)
         shell: bash
       - name: Checkout latest SMO code
-        if: contains(github.event.comment.body, '/release SMO')
+        if: contains(github.event.comment.body, '/release-action SMO')
         uses: actions/checkout@v4.2.2
         with:
           ref: master
@@ -36,7 +36,7 @@ jobs:
           fetch-tags: true
           submodules: recursive
       - name: Checkout latest Zing code
-        if: contains(github.event.comment.body, '/release Zing')
+        if: contains(github.event.comment.body, '/release-action Zing')
         uses: actions/checkout@v4.2.2
         with:
           ref: Zing
