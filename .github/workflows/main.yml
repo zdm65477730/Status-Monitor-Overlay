@@ -27,35 +27,36 @@ jobs:
           make install -j$(nproc)
         shell: bash
       - name: Checkout latest SMO code
+        if: contains(github.event.comment.body, '/release SMO')
         uses: actions/checkout@v4.2.2
         with:
           ref: master
-          path: Status-Monitor-Overlay
           clean: true
           fetch-depth: 0
           fetch-tags: true
           submodules: recursive
       - name: Checkout latest Zing code
+        if: contains(github.event.comment.body, '/release Zing')
         uses: actions/checkout@v4.2.2
         with:
           ref: Zing
-          path: Zing
           clean: true
           fetch-depth: 0
           fetch-tags: true
           submodules: recursive
       - name: Setup ENV parameters
         run: |
-          VER_FILE=Makefile
+          VER_FILE=Status-Monitor-Overlay/Makefile
+          APP_NAME=$(awk '/^APP_TITLE/{print $3}' $VER_FILE)
           VERSION=$(awk '/^APP_VERSION/{print $3}' $VER_FILE)
           echo "TAG=${VERSION}" >> "${GITHUB_ENV}"
-          echo "RELEASE_NAME=StatusMonitor ${VERSION}" >> "${GITHUB_ENV}"
+          echo "APP_NAME=${APP_NAME}" >> "${GITHUB_ENV}"
+          echo "RELEASE_NAME=${APP_NAME} ${VERSION}" >> "${GITHUB_ENV}"
         shell: bash
       - name: Build
         run: |
           export DEVKITPRO=/opt/devkitpro
-          make -C Status-Monitor-Overlay all
-          make -C Zing all
+          make all
         shell: bash
       - name: Upload Release Asset
         uses: softprops/action-gh-release@v2.0.9
@@ -67,5 +68,4 @@ jobs:
           generate_release_notes: yes
           make_latest: true
           files: |
-            ./Status-Monitor-Overlay/SdOut/StatusMonitor.zip
-            ./Zing/SdOut/Zing.zip
+            ./SdOut/${{ env.APP_NAME }}.zip
