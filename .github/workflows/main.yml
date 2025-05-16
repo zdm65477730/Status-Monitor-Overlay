@@ -26,10 +26,20 @@ jobs:
           cd libnx
           make install -j$(nproc)
         shell: bash
-      - name: Checkout latest code
-        uses: actions/checkout@v4.1.1
+      - name: Checkout latest SMO code
+        uses: actions/checkout@v4.2.2
         with:
           ref: master
+          path: Status-Monitor-Overlay
+          clean: true
+          fetch-depth: 0
+          fetch-tags: true
+          submodules: recursive
+      - name: Checkout latest Zing code
+        uses: actions/checkout@v4.2.2
+        with:
+          ref: Zing
+          path: Zing
           clean: true
           fetch-depth: 0
           fetch-tags: true
@@ -44,7 +54,8 @@ jobs:
       - name: Build
         run: |
           export DEVKITPRO=/opt/devkitpro
-          make all
+          make -C Status-Monitor-Overlay all
+          make -C Zing all
         shell: bash
       - name: Upload Release Asset
         uses: softprops/action-gh-release@v2.0.9
@@ -56,4 +67,5 @@ jobs:
           generate_release_notes: yes
           make_latest: true
           files: |
-            ./SdOut/StatusMonitor.zip
+            ./Status-Monitor-Overlay/SdOut/StatusMonitor.zip
+            ./Zing/SdOut/Zing.zip
