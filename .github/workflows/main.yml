@@ -30,7 +30,6 @@ jobs:
         uses: actions/checkout@v4.2.2
         with:
           ref: Zing
-          path: Zing
           clean: true
           fetch-depth: 0
           fetch-tags: true
