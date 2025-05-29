@@ -27,9 +27,10 @@ jobs:
           make install -j$(nproc)
         shell: bash
       - name: Checkout latest code
-        uses: actions/checkout@v4.1.1
+        uses: actions/checkout@v4.2.2
         with:
           ref: Zing
+          path: Zing
           clean: true
           fetch-depth: 0
           fetch-tags: true
