@@ -1,7 +1,6 @@
 #pragma once
-#define ALWAYS_INLINE inline __attribute__((always_inline))
 #include "SaltyNX.h"
-
+#define ALWAYS_INLINE inline __attribute__((always_inline))
 #include "Battery.hpp"
 #include "audsnoop.h"
 #include "Misc.hpp"
@@ -265,16 +264,16 @@ void CheckIfGameRunning(void*) {
 			check = true;
 		}
 		else if (!GameRunning && SharedMemoryUsed) {
-				uintptr_t base = (uintptr_t)shmemGetAddr(&_sharedmemory);
-				searchSharedMemoryBlock(base);
-				if (NxFps) {
-					(NxFps -> pluginActive) = false;
-					svcSleepThread(100'000'000);
-					if ((NxFps -> pluginActive)) {
-						GameRunning = true;
-						check = false;
-					}
+			uintptr_t base = (uintptr_t)shmemGetAddr(&_sharedmemory);
+			searchSharedMemoryBlock(base);
+			if (NxFps) {
+				(NxFps -> pluginActive) = false;
+				svcSleepThread(100'000'000);
+				if ((NxFps -> pluginActive)) {
+					GameRunning = true;
+					check = false;
 				}
+			}
 		}
 		svcSleepThread(1'000'000'000);
 	}
