@@ -45,7 +45,6 @@ jobs:
           fetch-tags: true
           submodules: recursive
       - name: Setup ENV parameters
-        if: contains(github.event.comment.body, '/release-action SMO')
         run: |
           VER_FILE=Makefile
           NAME=$(awk '/^APP_TITLE/{print $3}' $VER_FILE)
