@@ -51,7 +51,7 @@ jobs:
           VERSION=$(awk '/^APP_VERSION/{print $3}' $VER_FILE)
           echo "TAG=${VERSION}" >> "${GITHUB_ENV}"
           echo "APP_NAME=${NAME}" >> "${GITHUB_ENV}"
-          echo "RELEASE_NAME=${APPNAME} ${VERSION}" >> "${GITHUB_ENV}"
+          echo "RELEASE_NAME=${NAME} ${VERSION}" >> "${GITHUB_ENV}"
         shell: bash
       - name: Build
         run: |
