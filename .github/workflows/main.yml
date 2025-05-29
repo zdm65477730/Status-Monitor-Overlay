@@ -9,7 +9,7 @@ jobs:
     name: Build and release
     runs-on: ubuntu-latest
     container: devkitpro/devkita64:latest
-    if: contains(github.event.comment.body, '/release-action SMO')
+    if: contains(github.event.comment.body, '/release-action')
 
     steps:
       - name: Update packages
@@ -26,20 +26,33 @@ jobs:
           cd libnx
           make install -j$(nproc)
         shell: bash
-      - name: Checkout latest code
+      - name: Checkout latest SMO code
         uses: actions/checkout@v4.2.2
+        if: contains(github.event.comment.body, '/release-action SMO')
         with:
           ref: master
           clean: true
           fetch-depth: 0
           fetch-tags: true
           submodules: recursive
+      - name: Checkout latest Zing code
+        uses: actions/checkout@v4.2.2
+        if: contains(github.event.comment.body, '/release-action Zing')
+        with:
+          ref: Zing
+          clean: true
+          fetch-depth: 0
+          fetch-tags: true
+          submodules: recursive
       - name: Setup ENV parameters
+        if: contains(github.event.comment.body, '/release-action SMO')
         run: |
           VER_FILE=Makefile
+          NAME=$(awk '/^APP_TITLE/{print $3}' $VER_FILE)
           VERSION=$(awk '/^APP_VERSION/{print $3}' $VER_FILE)
           echo "TAG=${VERSION}" >> "${GITHUB_ENV}"
-          echo "RELEASE_NAME=StatusMonitor ${VERSION}" >> "${GITHUB_ENV}"
+          echo "APP_NAME=${NAME}" >> "${GITHUB_ENV}"
+          echo "RELEASE_NAME=${APPNAME} ${VERSION}" >> "${GITHUB_ENV}"
         shell: bash
       - name: Build
         run: |
@@ -56,4 +69,4 @@ jobs:
           generate_release_notes: yes
           make_latest: true
           files: |
-            ./SdOut/StatusMonitor.zip
+            ./SdOut/${{ env.APP_NAME }}.zip
