@@ -9,7 +9,7 @@ jobs:
     name: Build and release
     runs-on: ubuntu-latest
     container: devkitpro/devkita64:latest
-    if: contains(github.event.comment.body, '/release-action')
+    if: contains(github.event.comment.body, '/release-action SMO')
 
     steps:
       - name: Update packages
@@ -27,7 +27,7 @@ jobs:
           make install -j$(nproc)
         shell: bash
       - name: Checkout latest code
-        uses: actions/checkout@v4.1.1
+        uses: actions/checkout@v4.2.2
         with:
           ref: master
           clean: true
