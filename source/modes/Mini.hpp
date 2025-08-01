@@ -22,7 +22,7 @@ public:
 		apmGetPerformanceMode(&performanceMode);
 		mutexInit(&mutex_BatteryChecker);
 		mutexInit(&mutex_Misc);
-		alphabackground = 0x0;
+		IsFrameBackground = false;
 		tsl::hlp::requestForeground(false);
 		FullMode = false;
 		TeslaFPS = settings.refreshRate;
