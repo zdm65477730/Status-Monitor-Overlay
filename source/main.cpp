@@ -458,7 +458,9 @@ int main(int argc, char **argv) {
 		systemtickfrequency = armGetSystemTickFreq();
 	#endif
 
-	ParseIniFile(); // parse INI from file
+	tsl::hlp::doWithSDCardHandle([] {
+		ParseIniFile(); // parse INI from file
+	});
 
 	if (argc > 0) {
 		filename = argv[0];
