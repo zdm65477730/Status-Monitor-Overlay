@@ -120,7 +120,7 @@ public:
 				}
 				Initialized = true;
 			}
-			char print_text[128] = "";
+			char print_text[256] = "";
 			size_t entry_count = 0;
 			uint32_t flags = 0;
 			for (std::string key : tsl::hlp::split(settings.show, '+')) {
