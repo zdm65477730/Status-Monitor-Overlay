@@ -113,14 +113,14 @@ public:
 							rectangleWidth = dimensions.first;
 					}
 					else if (!key.compare("READ")) {
-						dimensions = renderer->drawString("4444.4MiB/s", false, 0, fontsize, fontsize, renderer->a(0x0000));
+						dimensions = renderer->drawString("4444.4 MiB/s", false, 0, fontsize, fontsize, renderer->a(0x0000));
 						if (rectangleWidth < dimensions.first)
 							rectangleWidth = dimensions.first;
 					}
 				}
 				Initialized = true;
 			}
-			char print_text[36] = "";
+			char print_text[128] = "";
 			size_t entry_count = 0;
 			uint32_t flags = 0;
 			for (std::string key : tsl::hlp::split(settings.show, '+')) {
@@ -486,7 +486,7 @@ public:
 					strcat(Temp, "\n");
 				}
 				char Temp_s[32] = "";
-				if ((NxFps -> readSpeedPerSecond) > 0.f) snprintf(Temp_s, sizeof(Temp_s), "%.2fMiB/s", (NxFps -> readSpeedPerSecond) / 1048576.f);
+				if ((NxFps -> readSpeedPerSecond) > 0.f) snprintf(Temp_s, sizeof(Temp_s), "%.2f MiB/s", (NxFps -> readSpeedPerSecond) / 1048576.f);
 				else strcpy(Temp_s, "n/d");
 				strcat(Temp, Temp_s);
 				flags |= 1 << 8;
