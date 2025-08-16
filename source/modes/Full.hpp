@@ -181,7 +181,7 @@ public:
 
 			///FPS
 			if (GameRunning) {
-				uint32_t width_offset = 230;
+				uint32_t width_offset = 150;
 				if (settings.showFPS || settings.showRES || settings.showRDSD) {
 					renderer->drawString("GameItemsFullOverlayCustomDrawerText"_tr.c_str(), false, COMMON_MARGIN + width_offset, 185, 20, renderer->a(0xFFFF));
 				}
