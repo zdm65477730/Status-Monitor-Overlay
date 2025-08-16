@@ -24,7 +24,7 @@
 	"UpdateFanRotationLevelFullOverlayCustomDrawerText": "风扇转速：%2.1f%%",
 	"UpdateFPSTitleFullOverlayCustomDrawerText": "推送帧率：%3u；帧率：%.1f",
 	"UpdateOneResolutionTitleFullOverlayCustomDrawerText": "分辨率：%dx%d",
-	"UpdateResolutionTitleFullOverlayCustomDrawerText": "分辨率：%dx%d | %dx%d",
+	"UpdateResolutionTitleFullOverlayCustomDrawerText": "分辨率：%dx%d || %dx%d",
 	"UpdateReadSpeedTitleFullOverlayCustomDrawerText": "读取速率：%.2f MiB/s",
 	"UpdateReadSpeedNDTitleFullOverlayCustomDrawerText": "读取速率：n/d",
 	"UpdateBatteryPowerFlowFullOverlayCustomDrawerText": "电池电量：%+.2fW[%s]",
