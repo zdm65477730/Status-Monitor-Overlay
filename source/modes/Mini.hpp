@@ -113,7 +113,7 @@ public:
 							rectangleWidth = dimensions.first;
 					}
 					else if (!key.compare("READ")) {
-						dimensions = renderer->drawString("4444.4 MiB/s", false, 0, fontsize, fontsize, renderer->a(0x0000));
+						dimensions = renderer->drawString("4444.4MiB/s", false, 0, fontsize, fontsize, renderer->a(0x0000));
 						if (rectangleWidth < dimensions.first)
 							rectangleWidth = dimensions.first;
 					}
@@ -178,7 +178,7 @@ public:
 				else if (!key.compare("RES") && !(flags & 1 << 7) && GameRunning) {
 					if (print_text[0])
 						strcat(print_text, "\n");
-					strcat(print_text, "RES");
+					strcat(print_text, "RESItemMiniOverlayCustomDrawerText"_tr.c_str());
 					entry_count++;
 					resolutionShow = true;
 					flags |= (1 << 7);
@@ -186,7 +186,7 @@ public:
 				else if (!key.compare("READ") && !(flags & 1 << 8) && GameRunning) {
 					if (print_text[0])
 						strcat(print_text, "\n");
-					strcat(print_text, "READ");
+					strcat(print_text, "READItemMiniOverlayCustomDrawerText"_tr.c_str());
 					entry_count++;
 					flags |= (1 << 8);
 				}
@@ -486,7 +486,7 @@ public:
 					strcat(Temp, "\n");
 				}
 				char Temp_s[32] = "";
-				if ((NxFps -> readSpeedPerSecond) > 0.f) snprintf(Temp_s, sizeof(Temp_s), "%.2f MiB/s", (NxFps -> readSpeedPerSecond) / 1048576.f);
+				if ((NxFps -> readSpeedPerSecond) > 0.f) snprintf(Temp_s, sizeof(Temp_s), "%.2fMiB/s", (NxFps -> readSpeedPerSecond) / 1048576.f);
 				else strcpy(Temp_s, "n/d");
 				strcat(Temp, Temp_s);
 				flags |= 1 << 8;

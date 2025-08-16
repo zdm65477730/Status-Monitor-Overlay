@@ -36,6 +36,8 @@
 	"CHRGItemMiniOverlayCustomDrawerText": "電源",
 	"FANItemMiniOverlayCustomDrawerText": "風扇",
 	"FPSItemMiniOverlayCustomDrawerText": "幀率",
+	"RESItemMiniOverlayCustomDrawerText": "分辨率",
+	"READItemMiniOverlayCustomDrawerText": "讀取",
 	"CPUItemMicroOverlayCustomDrawerText": "CPU [100%,100%,100%,100%]△4444.4",
 	"GPUItemMicroOverlayCustomDrawerText": "GPU 100.0%△4444.4",
 	"RAMItemDefaultMicroOverlayCustomDrawerText": "內存 4.4/44.4GB△4444.4",
