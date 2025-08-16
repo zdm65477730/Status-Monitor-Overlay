@@ -238,9 +238,8 @@ public:
 			return false;
 		});
 		list->addItem(Mini);
-		bool ovlExists = false;
-		tsl::hlp::doWithSDCardHandle([&ovlExists] {
-			bool fileExist = false;
+		bool fileExist = false;
+		tsl::hlp::doWithSDCardHandle([&fileExist] {
 			FILE* test = fopen(std::string(folderpath + filename).c_str(), "rb");
 			if (test) {
 				fclose(test);
@@ -255,11 +254,8 @@ public:
 					filepath = folderpath + APPTITLE ".ovl";
 				}
 			}
-			if (fileExist) {
-				ovlExists = true;
-			}
 		});
-		if (ovlExists) {
+		if (fileExist) {
 			auto Micro = new tsl::elm::ListItem("MicroMainMenuListItemText"_tr);
 			Micro->setClickListener([](uint64_t keys) {
 				if (keys & HidNpadButton_A) {
