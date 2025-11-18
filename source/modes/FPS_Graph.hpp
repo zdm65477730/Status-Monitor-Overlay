@@ -23,8 +23,10 @@ private:
 	bool reachedMaxX = false;
 public:
 	bool isStarted = false;
-    com_FPSGraph() { 
-		GetConfigSettings(&settings);
+	com_FPSGraph() {
+		tsl::hlp::doWithSDCardHandle([this] {
+			GetConfigSettings(&settings);
+		});
 		switch(settings.setPos) {
 			case 1:
 			case 4:
@@ -48,7 +50,7 @@ public:
 			svcSleepThread(100'000);
 			SaltySD_Term();
 		}
-		alphabackground = 0x0;
+		IsFrameBackground = false;
 		tsl::hlp::requestForeground(false);
 		FullMode = false;
 		TeslaFPS = settings.refreshRate;
@@ -60,7 +62,7 @@ public:
 		EndFPSCounterThread();
 		FullMode = true;
 		tsl::hlp::requestForeground(true);
-		alphabackground = 0xD;
+		IsFrameBackground = true;
 		deactivateOriginalFooter = false;
 	}
 
@@ -86,11 +88,10 @@ public:
 	s16 y_60FPS = rectangle_y;
 	bool isAbove = false;
 
-    virtual tsl::elm::Element* createUI() override {
+	virtual tsl::elm::Element* createUI() override {
 		rootFrame = new tsl::elm::OverlayFrame("", "");
 
 		auto Status = new tsl::elm::CustomDrawer([this](tsl::gfx::Renderer *renderer, u16 x, u16 y, u16 w, u16 h) {
-
 			if (refreshRate && refreshRate < 240) {
 				rectangle_height = refreshRate;
 				rectangle_range_max = refreshRate;
@@ -120,7 +121,7 @@ public:
 
 			static int base_x = 0;
 			static int base_y = 0;
-			
+
 			if (!changedPos) switch(settings.setPos) {
 				case 0:
 					base_x = 0;
@@ -223,7 +224,7 @@ public:
 			renderer->drawString(&legend_min[0], false, base_x+(rectangle_x-10), base_y+(rectangle_y+rectangle_height+3), 10, renderer->a(settings.minFPSTextColor));
 
 			size_t last_element = readings.size() - 1;
-			
+
 			s16 offset = 0;
 			if (refreshRate >= 100) offset = 7;
 
@@ -234,9 +235,9 @@ public:
 				}
 				else if (y_on_range > range) {
 					isAbove = true;
-					y_on_range = range; 
+					y_on_range = range;
 				}
-				
+
 				s16 y = rectangle_y + static_cast<s16>(std::lround((float)rectangle_height * ((float)(range - y_on_range) / (float)range))); // 320 + (80 * ((61 - 61)/61)) = 320
 				auto colour = renderer->a(settings.mainLineColor);
 				if (y == y_old && !isAbove && readings[last_element].zero_rounded) {
@@ -251,11 +252,11 @@ public:
 				}
 				/*
 				else if (y - y_old > 0) {
-					if (y_old + 1 <= rectangle_y+rectangle_height) 
+					if (y_old + 1 <= rectangle_y+rectangle_height)
 						y_old += 1;
 				}
 				else if (y - y_old < 0) {
-					if (y_old - 1 >= rectangle_y) 
+					if (y_old - 1 >= rectangle_y)
 						y_old -= 1;
 				}
 				*/
@@ -304,25 +305,25 @@ public:
 				lastFrame = 0;
 			}
 			FPSavg_c[0] = 0;
-		}
-		
+		}	
 	}
-	virtual bool handleInput(uint64_t keysDown, uint64_t keysHeld, touchPosition touchInput, JoystickPosition leftJoyStick, JoystickPosition rightJoyStick) override {
+
+	virtual bool handleInput(uint64_t keysDown, uint64_t keysHeld, const HidTouchState &touchPos, HidAnalogStickState leftJoyStick, HidAnalogStickState rightJoyStick) override {
 		bool m_touchScreen = touchScreen;
 		if (m_touchScreen) {
-			if (*touchInput.delta_time != 0 && (*touchInput.x >= m_base_x && *touchInput.x <= (m_base_x + m_width)) && (*touchInput.y >= m_base_y && *touchInput.y <= (m_base_y + m_height))) {
+			if (touchPos.delta_time != 0 && (touchPos.x >= m_base_x && touchPos.x <= (m_base_x + m_width)) && (touchPos.y >= m_base_y && touchPos.y <= (m_base_y + m_height))) {
 				changingPos = true;
 				changedPos = true;
 			}
-			else if (changingPos && *touchInput.delta_time == 0) {
+			else if (changingPos && touchPos.delta_time == 0) {
 				touch_pos_x = -1;
 				touch_pos_y = -1;
 				changingPos = false;
 				return false;
 			}
 			if (changingPos) {
-				touch_pos_x = *touchInput.x;
-				touch_pos_y = *touchInput.y;
+				touch_pos_x = touchPos.x;
+				touch_pos_y = touchPos.y;
 				if (touch_pos_y >= 704) touch_pos_y = 720;
 				else if (touch_pos_y <= 15) touch_pos_y = 0;
 				if (touch_pos_x >= 1264) touch_pos_x = 1280;

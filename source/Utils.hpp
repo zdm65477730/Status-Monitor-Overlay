@@ -583,7 +583,6 @@ void StartThreads(void*) {
 	threadWaitForExit(&t5);
 	threadWaitForExit(&t6);
 	threadWaitForExit(&t7);
-	leventClear(&threadexit);
 	threadexit2 = 0;
 
 	threadClose(&t0);
@@ -1627,4 +1626,3 @@ ALWAYS_INLINE void GetConfigSettings(ResolutionSettings* settings) {
 		}
 	}
 }
-

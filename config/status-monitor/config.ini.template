@@ -5,7 +5,6 @@ battery_time_left_refreshrate=60
 average_gpu_load=false
 font_cache=true
 use_old_fps_average=false
-touch_screen=true
 [full]
 refresh_rate=1
 layer_width_align=left
@@ -25,7 +24,7 @@ real_freqs=false
 show=CPU+GPU+RAM+TEMP+FAN+DRAW+FPS+RES+READ
 replace_MB_with_RAM_load=true
 background_color=#1117
-cat_color=#FFFF
+cat_color=#FCCF
 text_color=#FFFF
 [micro]
 refresh_rate=1

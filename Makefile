@@ -37,37 +37,41 @@ include $(DEVKITPRO)/libnx/switch_rules
 #   of a homebrew executable (.nro). This is intended to be used for sysmodules.
 #   NACP building is skipped as well.
 #---------------------------------------------------------------------------------
-APP_TITLE	:=	Status Monitor
-APP_VERSION	:=	1.3.2
-TARGET		:=	$(notdir $(CURDIR))
+APP_TITLE	:=	StatusMonitor
+APP_VERSION	:=	v1.2.3
+TARGET		:=	$(APP_TITLE)
 BUILD		:=	build
 SOURCES		:=	source
 INCLUDES	:=	include lib/Atmosphere-libs/libstratosphere/source/dmnt lib/Atmosphere-libs/libstratosphere/source lib/libtesla/include
-NO_ICON		:=	1
-#ROMFS		:=	romfs
+NO_ICON		:=  1
+#ROMFS       :=  romfs
+
+ifeq ($(RELEASE),)
+	APP_VERSION	:=	$(APP_VERSION)-$(shell git describe --always)
+endif
 
 #---------------------------------------------------------------------------------
 # options for code generation
 #---------------------------------------------------------------------------------
-ARCH		:=	-march=armv8-a+crc+crypto -mtune=cortex-a57 -mtp=soft -fPIE
+ARCH	:=	-march=armv8-a+crc+crypto -mtune=cortex-a57 -mtp=soft -fPIE
 
-CFLAGS	:=	-g -Wall -Werror -Wno-address-of-packed-member -O2 -ffunction-sections -ffast-math \
+CFLAGS	:=	-g -Wall -Wno-address-of-packed-member -O3 -ffunction-sections -ffast-math \
 			$(ARCH) $(DEFINES)
 
-CFLAGS		+=	$(INCLUDE) -D__SWITCH__ -DAPP_VERSION="\"$(APP_VERSION)\""
+CFLAGS	+=	$(INCLUDE) -D__SWITCH__ -DAPP_VERSION=\"$(APP_VERSION)\" -DAPPTITLE=\"$(APP_TITLE)\" -DBUILD_STATUS_MONITOR_OVERLAY
 
-CXXFLAGS	:=	$(CFLAGS) -fno-exceptions -std=c++23
+CXXFLAGS	:= $(CFLAGS) -fexceptions -std=c++23 -Wno-dangling-else
 
-ASFLAGS		:=	-g $(ARCH)
-LDFLAGS		=	-specs=$(DEVKITPRO)/libnx/switch.specs -g $(ARCH) -Wl,-Map,$(notdir $*.map)
+ASFLAGS	:=	-g $(ARCH)
+LDFLAGS	=	-specs=$(DEVKITPRO)/libnx/switch.specs -g $(ARCH) -Wl,-Map,$(notdir $*.map)
 
-LIBS		:=	-lnx
+LIBS	:= -lnx
 
 #---------------------------------------------------------------------------------
 # list of directories containing libraries, this must be the top level containing
 # include and lib
 #---------------------------------------------------------------------------------
-LIBDIRS		:=	$(PORTLIBS) $(LIBNX)
+LIBDIRS	:= $(PORTLIBS) $(LIBNX)
 
 
 #---------------------------------------------------------------------------------
@@ -166,23 +170,19 @@ all: $(BUILD)
 $(BUILD):
 	@[ -d $@ ] || mkdir -p $@
 	@$(MAKE) --no-print-directory -C $(BUILD) -f $(CURDIR)/Makefile
-	@rm -rf out/
-	@mkdir -p out/switch/.overlays/
-	@cp -a $(CURDIR)/config out/
-	@cp $(CURDIR)/$(TARGET).ovl out/switch/.overlays/$(TARGET).ovl
+	@rm -rf $(CURDIR)/SdOut
+	@mkdir -p $(CURDIR)/SdOut/switch/.overlays/lang/$(APP_TITLE)
+	@mkdir -p $(CURDIR)/SdOut/config/status-monitor/
+	@cp -r $(TARGET).ovl $(CURDIR)/SdOut/switch/.overlays/
+	@cp -r $(CURDIR)/lang/* $(CURDIR)/SdOut/switch/.overlays/lang/$(APP_TITLE)/
+	@cp -r $(CURDIR)/config/status-monitor/config.ini.template $(CURDIR)/SdOut/config/status-monitor/config.ini
+	@cd $(CURDIR)/SdOut; zip -r -q -9 $(APP_TITLE).zip switch config; cd $(CURDIR)
 
 #---------------------------------------------------------------------------------
 clean:
-	@echo "Cleanning ... $(TARGET)"
-	@rm -fr $(BUILD) $(TARGET).ovl $(TARGET).nro $(TARGET).nacp $(TARGET).elf
-	@rm -rf out/
-	@rm -f $(TARGET).zip
+	@rm -fr $(BUILD) $(TARGET).ovl $(TARGET).nro $(TARGET).nacp $(TARGET).elf $(CURDIR)/SdOut
 
-#---------------------------------------------------------------------------------
-dist: all
-	@echo making dist ...
-	@rm -f $(TARGET).zip
-	@cd out; zip -r ../$(TARGET).zip ./*; cd ../
+
 #---------------------------------------------------------------------------------
 else
 .PHONY:	all
