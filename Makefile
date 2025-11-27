@@ -38,7 +38,7 @@ include $(DEVKITPRO)/libnx/switch_rules
 #   NACP building is skipped as well.
 #---------------------------------------------------------------------------------
 APP_TITLE	:=	StatusMonitor
-APP_VERSION	:=	v1.2.3
+APP_VERSION	:=	v1.3.2
 TARGET		:=	$(APP_TITLE)
 BUILD		:=	build
 SOURCES		:=	source
