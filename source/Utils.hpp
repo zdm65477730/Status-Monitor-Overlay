@@ -1627,4 +1627,3 @@ ALWAYS_INLINE void GetConfigSettings(ResolutionSettings* settings) {
 		}
 	}
 }
-

@@ -362,4 +362,3 @@ std::vector<std::string> getFilesListByWildcards(const std::string& pathPattern)
 
     return fileList;
 }
-

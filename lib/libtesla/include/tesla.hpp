@@ -19,33 +19,6 @@
 
 #pragma once
 
-
-
-#define KEY_A HidNpadButton_A
-#define KEY_B HidNpadButton_B
-#define KEY_X HidNpadButton_X
-#define KEY_Y HidNpadButton_Y
-#define KEY_L HidNpadButton_L
-#define KEY_R HidNpadButton_R
-#define KEY_ZL HidNpadButton_ZL
-#define KEY_ZR HidNpadButton_ZR
-#define KEY_PLUS HidNpadButton_Plus
-#define KEY_MINUS HidNpadButton_Minus
-#define KEY_DUP HidNpadButton_Up
-#define KEY_DDOWN HidNpadButton_Down
-#define KEY_DLEFT HidNpadButton_Left
-#define KEY_DRIGHT HidNpadButton_Right
-#define KEY_SL HidNpadButton_AnySL
-#define KEY_SR HidNpadButton_AnySR
-#define KEY_LSTICK HidNpadButton_StickL
-#define KEY_RSTICK HidNpadButton_StickR
-#define KEY_UP (HidNpadButton_Up | HidNpadButton_StickLUp | HidNpadButton_StickRUp)
-#define KEY_DOWN (HidNpadButton_Down | HidNpadButton_StickLDown | HidNpadButton_StickRDown)
-#define KEY_LEFT (HidNpadButton_Left | HidNpadButton_StickLLeft | HidNpadButton_StickRLeft)
-#define KEY_RIGHT (HidNpadButton_Right | HidNpadButton_StickLRight | HidNpadButton_StickRRight)
-#define touchPosition const HidTouchState
-#define touchInput &touchPos
-#define JoystickPosition HidAnalogStickState
 float M_PI = 3.14159265358979323846;
 
 #include <switch.h>
@@ -58,9 +31,15 @@ extern "C" {
 	}
 }
 
+#include <switch.h>
+#include <json.hpp>
+
 #include <stdlib.h>
 #include <strings.h>
 #include <math.h>
+#include <unordered_map>
+#include <fstream>
+#include <filesystem>
 
 #include <algorithm>
 #include <cstring>
@@ -74,7 +53,6 @@ extern "C" {
 #include <list>
 #include <stack>
 #include <map>
-
 
 #include "ini_funcs.hpp"
 
@@ -112,9 +90,21 @@ bool isValidHexColor(const std::string& hexColor) {
 
 #define ASSERT_EXIT(x) if (R_FAILED(x)) std::exit(1)
 #define ASSERT_FATAL(x) if (Result res = x; R_FAILED(res)) fatalThrow(res)
-	
+
+#define PACKED __attribute__((packed))
+#define ALWAYS_INLINE inline __attribute__((always_inline))
+
+/// Evaluates an expression that returns a result, and returns the result if it would fail.
+#define TSL_R_TRY(resultExpr)           \
+    ({                                  \
+        const auto result = resultExpr; \
+        if (R_FAILED(result)) {         \
+            return result;              \
+        }                               \
+    })
+
 u8 TeslaFPS = 0;
-u8 alphabackground = 0xD;
+bool IsFrameBackground = true;
 bool FullMode = true;
 PadState pad;
 uint16_t framebufferWidth = 448;
@@ -237,6 +227,36 @@ namespace tsl {
 		}
 
 		/**
+         * @brief Wrapper for sd card access using stdio
+         * @note Consider using raw fs calls instead as they are faster and need less space
+         *
+         * @param f wrapped function
+         */
+        template<typename F>
+        static inline void doWithSDCardHandle(F f) {
+            fsdevMountSdmc();
+            f();
+            fsdevUnmountDevice("sdmc");
+        }
+
+        /**
+         * @brief Guard that will execute a passed function at the end of the current scope
+         *
+         * @param f wrapped function
+         */
+        template<typename F>
+        class ScopeGuard {
+            ScopeGuard(const ScopeGuard&) = delete;
+            ScopeGuard& operator=(const ScopeGuard&) = delete;
+            private:
+                F f;
+                bool canceled = false;
+            public:
+                ALWAYS_INLINE ScopeGuard(F f) : f(std::move(f)) { }
+                ALWAYS_INLINE ~ScopeGuard() { if (!canceled) { f(); } }
+                void dismiss() { canceled = true; }
+        };
+		/**
 		 * @brief libnx hid:sys shim that gives or takes away frocus to or from the process with the given aruid
 		 * 
 		 * @param enable Give focus or take focus
@@ -349,45 +369,192 @@ namespace tsl {
 		 */
 		static u64 stringToKeyCode(std::string &value) {
 			if (strcasecmp(value.c_str(), "A")           == 0)
-				return KEY_A;
+				return HidNpadButton_A;
 			else if (strcasecmp(value.c_str(), "B")      == 0)
-				return KEY_B;
+				return HidNpadButton_B;
 			else if (strcasecmp(value.c_str(), "X")      == 0)
-				return KEY_X;
+				return HidNpadButton_X;
 			else if (strcasecmp(value.c_str(), "Y")      == 0)
-				return KEY_Y;
+				return HidNpadButton_Y;
 			else if (strcasecmp(value.c_str(), "LS")     == 0)
-				return KEY_LSTICK;
+				return HidNpadButton_StickL;
 			else if (strcasecmp(value.c_str(), "RS")     == 0)
-				return KEY_RSTICK;
+				return HidNpadButton_StickR;
 			else if (strcasecmp(value.c_str(), "L")      == 0)
-				return KEY_L;
+				return HidNpadButton_L;
 			else if (strcasecmp(value.c_str(), "R")      == 0)
-				return KEY_R;
+				return HidNpadButton_R;
 			else if (strcasecmp(value.c_str(), "ZL")     == 0)
-				return KEY_ZL;
+				return HidNpadButton_ZL;
 			else if (strcasecmp(value.c_str(), "ZR")     == 0)
-				return KEY_ZR;
+				return HidNpadButton_ZR;
 			else if (strcasecmp(value.c_str(), "PLUS")   == 0)
-				return KEY_PLUS;
+				return HidNpadButton_Plus;
 			else if (strcasecmp(value.c_str(), "MINUS")  == 0)
-				return KEY_MINUS;
+				return HidNpadButton_Minus;
 			else if (strcasecmp(value.c_str(), "DLEFT")  == 0)
-				return KEY_DLEFT;
+				return HidNpadButton_Left;
 			else if (strcasecmp(value.c_str(), "DUP")    == 0)
-				return KEY_DUP;
+				return HidNpadButton_Up;
 			else if (strcasecmp(value.c_str(), "DRIGHT") == 0)
-				return KEY_DRIGHT;
+				return HidNpadButton_Right;
 			else if (strcasecmp(value.c_str(), "DDOWN")  == 0)
-				return KEY_DDOWN;
+				return HidNpadButton_Down;
 			else if (strcasecmp(value.c_str(), "SL")     == 0)
-				return KEY_SL;
+				return HidNpadButton_AnySL;
 			else if (strcasecmp(value.c_str(), "SR")     == 0)
-				return KEY_SR;
+				return HidNpadButton_AnySR;
 			else return 0;
 		}
 
 	}
+
+	namespace tr {
+        namespace {
+            constexpr auto DefaultUnknownString = "???";
+
+            using LanguageStrings = std::map<std::string, std::string>;
+            LanguageStrings g_SystemLanguageStrings;
+            std::string g_baseLang{"None"};
+
+            Result GetSysBaseLang(std::string &sysBaseLang) {
+                if (g_baseLang != "None") {
+                    sysBaseLang = g_baseLang;
+                    return 0;
+                }
+
+                Result rc;
+                if(R_SUCCEEDED(rc = setInitialize())) {
+                    u64 languageCode;
+                    if (R_SUCCEEDED(rc = setGetSystemLanguage(&languageCode))) {
+                        SetLanguage language{SetLanguage_ENUS};
+                        if (R_SUCCEEDED(rc = setMakeLanguage(languageCode, &language))) {
+                            switch (language) {
+                            case SetLanguage_JA:
+                                g_baseLang = "ja";
+                                break;
+                            case SetLanguage_ENUS:
+                            case SetLanguage_ENGB:
+                                g_baseLang = "en";
+                                break;
+                            case SetLanguage_FR:
+                            case SetLanguage_FRCA:
+                                g_baseLang = "fr";
+                                break;
+                            case SetLanguage_DE:
+                                g_baseLang = "de";
+                                break;
+                            case SetLanguage_IT:
+                                g_baseLang = "it";
+                                break;
+                            case SetLanguage_ES:
+                            case SetLanguage_ES419:
+                                g_baseLang = "es";
+                                break;
+                            case SetLanguage_ZHCN:
+                            case SetLanguage_ZHHANS:
+                                g_baseLang = "zh-Hans";
+                                break;
+                            case SetLanguage_KO:
+                                g_baseLang = "ko";
+                                break;
+                            case SetLanguage_NL:
+                                g_baseLang = "nl";
+                                break;
+                            case SetLanguage_PT:
+                            case SetLanguage_PTBR:
+                                g_baseLang = "pt";
+                                break;
+                            case SetLanguage_RU:
+                                g_baseLang = "ru";
+                                break;
+                            case SetLanguage_ZHTW:
+                            case SetLanguage_ZHHANT:
+                                g_baseLang = "zh-Hant";
+                                break;
+                            default:
+                                g_baseLang = "en";
+                                break;
+                            }
+                        }
+                    }
+                    setExit();
+                }
+
+                sysBaseLang = g_baseLang;
+                return rc;
+            }
+
+            void fillLangStrings(nlohmann::json &json, LanguageStrings &out_strs) {
+                if(!json.empty()) {
+                    for(auto item : json.items()) {
+                        out_strs[item.key()] = item.value();
+                    }
+                }
+            }
+
+            bool LoadLanguageStrings(std::string &langPath, std::string &lang, LanguageStrings &out_strs) {
+                std::string langFilePath = langPath + lang + ".json";
+                if (!std::filesystem::exists(langFilePath)) return true;
+
+                bool ok = false;
+                try {
+                    std::ifstream ifs(langFilePath);
+                    auto lang_json = nlohmann::json::parse(ifs);
+                    fillLangStrings(lang_json, out_strs);
+                    ok = true;
+                }
+                catch(std::exception&) {
+                    ok = false;
+                }
+                return ok;
+            }
+
+            bool LoadTrans(std::string &langPath, LanguageStrings &out_strs) {
+                bool ok = false;
+                std::string base_lang;
+                if (R_SUCCEEDED(GetSysBaseLang(base_lang))) {
+                    ok = LoadLanguageStrings(langPath, base_lang, out_strs);
+                }
+
+                return ok;
+            }
+
+            std::string Translate(const std::string &key) {
+                if(g_SystemLanguageStrings.count(key)) {
+                    return g_SystemLanguageStrings.at(key);
+                } else {
+                    return DefaultUnknownString;
+                }
+            }
+        }
+
+        inline Result GetSysBaseLanguage(std::string &base_lang) {
+            return GetSysBaseLang(base_lang);
+        }
+
+        /* call within tsl::hlp::doWithSDCardHandle([&]() {} */
+        inline bool InitTrans(std::string &langPath, std::string &defaultTrans) {
+            if (!std::filesystem::exists(langPath)) return false;
+            if (!defaultTrans.size()) return false;
+
+            bool ok = false;
+            try {
+                if (g_SystemLanguageStrings.empty()) {
+                    auto lang_json = nlohmann::json::parse(defaultTrans);
+                    fillLangStrings(lang_json, g_SystemLanguageStrings);
+                    ok = LoadTrans(langPath, g_SystemLanguageStrings);
+                }
+            } catch(std::exception&) {
+                ok = false;
+            }
+            return ok;
+        }
+    }
+
+    inline std::string operator ""_tr(const char *key_lit, size_t key_lit_size) {
+        return tr::Translate(std::string(key_lit, key_lit_size));
+    }
 
 	// Renderer
 
@@ -751,16 +918,16 @@ namespace tsl {
 			}
 
 			/**
-			 * @brief Draws a string
-			 * 
-			 * @param string String to draw
-			 * @param monospace Draw string in monospace font
-			 * @param x X pos
-			 * @param y Y pos
-			 * @param fontSize Height of the text drawn in pixels 
-			 * @param color Text color. Use transparent color to skip drawing and only get the string's dimensions
-			 * @return Dimensions of drawn string
-			 */
+             * @brief Draws a string
+             *
+             * @param string String to draw
+             * @param monospace Draw string in monospace font
+             * @param x X pos
+             * @param y Y pos
+             * @param fontSize Height of the text drawn in pixels
+             * @param color Text color. Use transparent color to skip drawing and only get the string's dimensions
+             * @return Dimensions of drawn string
+             */
 			std::pair<u32, u32> drawString(const char* string, bool monospace, u32 x, u32 y, float fontSize, Color color) {
 				const size_t stringLength = strlen(string);
 
@@ -784,6 +951,8 @@ namespace tsl {
 
 					if (stbtt_FindGlyphIndex(&this->m_extFont, currCharacter))
 						currFont = &this->m_extFont;
+					else if(this->m_hasLocalFont && stbtt_FindGlyphIndex(&this->m_stdFont, currCharacter)==0)
+					        currFont = &this->m_localFont;
 					else
 						currFont = &this->m_stdFont;
 
@@ -818,6 +987,14 @@ namespace tsl {
 				return { maxX - x, currY - y };
 			}
 			
+			/**
+             * @brief Get the main frame button display string
+             *
+             * @return Main button display text
+             */
+            std::string getMainFrameButtonText() {
+                return this->m_MainFrameButtonText;
+            }
 		private:
 			Renderer() {}
 
@@ -843,6 +1020,10 @@ namespace tsl {
 				Renderer::s_opacity = opacity;
 			}
 
+			/**
+             * @brief Main frame button text
+             */
+            std::string m_MainFrameButtonText{"\uE0E1  Back     \uE0E0  OK"};
 			bool m_initialized = false;
 			ViDisplay m_display;
 			ViLayer m_layer;
@@ -855,7 +1036,8 @@ namespace tsl {
 			bool m_scissoring = false;
 			u16 m_scissorBounds[4];
 
-			stbtt_fontinfo m_stdFont, m_extFont;
+			stbtt_fontinfo m_stdFont, m_localFont, m_extFont;
+            bool m_hasLocalFont = false;
 
 			static inline float s_opacity = 1.0F;
 
@@ -1014,31 +1196,99 @@ namespace tsl {
 			}
 
 			/**
-			 * @brief Initializes Nintendo's shared fonts. Default and Extended
-			 * 
-			 * @return Result
-			 */
-			Result initFonts() {
-				Result res;
+             * @brief Initializes Nintendo's shared fonts. Default and Extended
+             *
+             * @return Result
+             */
+            Result initFonts() {
+                static PlFontData stdFontData, localFontData, extFontData;
 
-				static PlFontData stdFontData, extFontData;
+                // Nintendo's default font
+                TSL_R_TRY(plGetSharedFontByType(&stdFontData, PlSharedFontType_Standard));
 
-				// Nintendo's default font
-				if(R_FAILED(res = plGetSharedFontByType(&stdFontData, PlSharedFontType_Standard)))
-					return res;
+                u8 *fontBuffer = reinterpret_cast<u8*>(stdFontData.address);
+                stbtt_InitFont(&this->m_stdFont, fontBuffer, stbtt_GetFontOffsetForIndex(fontBuffer, 0));
 
-				u8 *fontBuffer = reinterpret_cast<u8*>(stdFontData.address);
-				stbtt_InitFont(&this->m_stdFont, fontBuffer, stbtt_GetFontOffsetForIndex(fontBuffer, 0));
-				
-				// Nintendo's extended font containing a bunch of icons
-				if(R_FAILED(res = plGetSharedFontByType(&extFontData, PlSharedFontType_NintendoExt)))
-					return res;
+                // Nintendo's extended font containing a bunch of icons
+                TSL_R_TRY(plGetSharedFontByType(&extFontData, PlSharedFontType_NintendoExt));
 
-				fontBuffer = reinterpret_cast<u8*>(extFontData.address);
-				stbtt_InitFont(&this->m_extFont, fontBuffer, stbtt_GetFontOffsetForIndex(fontBuffer, 0));
+                fontBuffer = reinterpret_cast<u8*>(extFontData.address);
+                stbtt_InitFont(&this->m_extFont, fontBuffer, stbtt_GetFontOffsetForIndex(fontBuffer, 0));
 
-				return res;
-			}
+                if(R_SUCCEEDED(setInitialize())) {
+                    u64 languageCode;
+                    this->m_hasLocalFont = false;
+                    if (R_SUCCEEDED(setGetSystemLanguage(&languageCode))) {
+                        SetLanguage setLanguage{SetLanguage_ENUS};
+                        if (R_SUCCEEDED(setMakeLanguage(languageCode, &setLanguage))) {
+                            switch (setLanguage) {
+                            case SetLanguage_JA:
+                                    this->m_MainFrameButtonText = "\uE0E1  戻る     \uE0E0  確認";
+                                break;
+                            case SetLanguage_ENUS:
+                            case SetLanguage_ENGB:
+                                    this->m_MainFrameButtonText = "\uE0E1  Back     \uE0E0  OK";
+                                break;
+                            case SetLanguage_FR:
+                            case SetLanguage_FRCA:
+                                    this->m_MainFrameButtonText = "\uE0E1  Retour     \uE0E0  Confirmation";
+                                break;
+                            case SetLanguage_DE:
+                                    this->m_MainFrameButtonText = "\uE0E1  Zurück     \uE0E0  Bestätigen";
+                                break;
+                            case SetLanguage_IT:
+                                    this->m_MainFrameButtonText = "\uE0E1  Ritorno     \uE0E0  Conferma";
+                                break;
+                            case SetLanguage_ES:
+                            case SetLanguage_ES419:
+                                    this->m_MainFrameButtonText = "\uE0E1  Return     \uE0E0  Confirmar";
+                                break;
+                            case SetLanguage_ZHCN:
+                            case SetLanguage_ZHHANS:
+                                if(R_SUCCEEDED(plGetSharedFontByType(&localFontData, PlSharedFontType_ChineseSimplified))) {
+                                    this->m_hasLocalFont = true;
+                                    this->m_MainFrameButtonText = "\uE0E1  返回     \uE0E0  确认";
+                                }
+                                break;
+                            case SetLanguage_KO:
+                                if(R_SUCCEEDED(plGetSharedFontByType(&localFontData, PlSharedFontType_KO))) {
+                                    this->m_hasLocalFont = true;
+                                    this->m_MainFrameButtonText = "\uE0E1  뒤로     \uE0E0  확인";
+                                }
+                                break;
+                            case SetLanguage_NL:
+                                    this->m_MainFrameButtonText = "\uE0E1  Terugkeer     \uE0E0  Bevestigen";
+                                break;
+                            case SetLanguage_PT:
+                            case SetLanguage_PTBR:
+                                    this->m_MainFrameButtonText = "\uE0E1  Retorno     \uE0E0  Confirmar";
+                                break;
+                            case SetLanguage_RU:
+                                    this->m_MainFrameButtonText = "\uE0E1  возвращение      \uE0E0  подтверждение ";
+                                break;
+                            case SetLanguage_ZHTW:
+                            case SetLanguage_ZHHANT:
+                                if(R_SUCCEEDED(plGetSharedFontByType(&localFontData, PlSharedFontType_ChineseTraditional))) {
+                                    this->m_hasLocalFont = true;
+                                    this->m_MainFrameButtonText = "\uE0E1  返回     \uE0E0  確認";
+                                }
+                                break;
+                            default:
+                                this->m_hasLocalFont = false;
+                                break;
+                            }
+                            if (this->m_hasLocalFont) {
+                                fontBuffer = reinterpret_cast<u8*>(localFontData.address);
+                                stbtt_InitFont(&this->m_localFont, fontBuffer, stbtt_GetFontOffsetForIndex(fontBuffer, 0));
+                            }
+                        }
+                    }
+                    setExit();
+                }
+
+                return 0;
+            }
+
 			
 			/**
 			 * @brief Start a new frame
@@ -1438,13 +1688,13 @@ namespace tsl {
 			}
 
 			virtual void draw(gfx::Renderer *renderer) override {
-				renderer->fillScreen(a({ 0x0, 0x0, 0x0, alphabackground }));
+				renderer->fillScreen(a({ 0x0, 0x0, 0x0, IsFrameBackground ? static_cast<u8>(0xD) : static_cast<u8>(0x0)  }));
 
 				renderer->drawString(this->m_title.c_str(), false, 20, 50, 30, a(defaultTextColor));
 				renderer->drawString(this->m_subtitle.c_str(), false, 20, 70, 15, a(defaultTextColor));
 
 				if (FullMode == true) renderer->drawRect(15, 720 - 73, tsl::cfg::FramebufferWidth - 30, 1, a(defaultTextColor));
-				if (!deactivateOriginalFooter) renderer->drawString("\uE0E1  Back     \uE0E0  OK", false, 30, 693, 23, a(defaultTextColor));
+				if (!deactivateOriginalFooter) renderer->drawString(renderer->getMainFrameButtonText().c_str(), false, 30, 693, 23, a(defaultTextColor));
 
 				if (this->m_contentElement != nullptr)
 					this->m_contentElement->frame(renderer);
@@ -1604,7 +1854,7 @@ namespace tsl {
 			virtual ~ToggleListItem() {}
 
 			virtual bool onClick(u64 keys) {
-				if (keys & KEY_A) {
+				if (keys & HidNpadButton_A) {
 					this->m_state = !this->m_state;
 
 					this->setState(this->m_state);
@@ -1848,12 +2098,12 @@ namespace tsl {
 		 * 
 		 * @param keysDown Buttons pressed in the last frame
 		 * @param keysHeld Buttons held down longer than one frame
-		 * @param touchInput Last touch position
+		 * @param touchPos Last touch position
 		 * @param leftJoyStick Left joystick position
 		 * @param rightJoyStick Right joystick position
 		 * @return Weather or not the input has been consumed
 		 */
-		virtual bool handleInput(u64 keysDown, u64 keysHeld, touchPosition touchInput, JoystickPosition leftJoyStick, JoystickPosition rightJoyStick) {
+		virtual bool handleInput(u64 keysDown, u64 keysHeld, const HidTouchState &touchPos, HidAnalogStickState leftJoyStick, HidAnalogStickState rightJoyStick) {
 			return false;
 		}
 
@@ -2164,12 +2414,12 @@ namespace tsl {
 		 * 
 		 * @param keysDown Buttons pressed in the last frame
 		 * @param keysHeld Buttons held down longer than one frame
-		 * @param touchInput Last touch position
+		 * @param touchPos Last touch position
 		 * @param leftJoyStick Left joystick position
 		 * @param rightJoyStick Right joystick position
 		 * @return Weather or not the input has been consumed
 		 */
-		virtual void handleInput(u64 keysDown, u64 keysHeld, touchPosition touchPos, JoystickPosition joyStickPosLeft, JoystickPosition joyStickPosRight) final {
+		virtual void handleInput(u64 keysDown, u64 keysHeld, const HidTouchState touchPos, HidAnalogStickState joyStickPosLeft, HidAnalogStickState joyStickPosRight) final {
 			auto& currentGui = this->getCurrentGui();
 			auto currentFocus = currentGui->getFocusedElement();
 
@@ -2194,13 +2444,13 @@ namespace tsl {
 			handled = handled | currentGui->handleInput(keysDown, keysHeld, touchPos, joyStickPosLeft, joyStickPosRight);
 
 			if (!handled) {
-				if (keysDown & KEY_UP)
+				if (keysDown & (HidNpadButton_Up | HidNpadButton_StickLUp | HidNpadButton_StickRUp))
 					currentGui->requestFocus(currentFocus->getParent(), FocusDirection::Up);
-				else if (keysDown & KEY_DOWN)
+				else if (keysDown & (HidNpadButton_Down | HidNpadButton_StickLDown | HidNpadButton_StickRDown))
 					currentGui->requestFocus(currentFocus->getParent(), FocusDirection::Down);
-				else if (keysDown & KEY_LEFT)
+				else if (keysDown & (HidNpadButton_Left | HidNpadButton_StickLLeft | HidNpadButton_StickRLeft))
 					currentGui->requestFocus(currentFocus->getParent(), FocusDirection::Left);
-				else if (keysDown & KEY_RIGHT)
+				else if (keysDown & (HidNpadButton_Right | HidNpadButton_StickLRight | HidNpadButton_StickRRight))
 					currentGui->requestFocus(currentFocus->getParent(), FocusDirection::Right);
 			}
 		}
@@ -2329,7 +2579,7 @@ namespace tsl {
 
 			Event comboEvent = { 0 }, homeButtonPressEvent = { 0 }, powerButtonPressEvent = { 0 };
 
-			u64 launchCombo = KEY_L | KEY_DDOWN | KEY_RSTICK;
+			u64 launchCombo = HidNpadButton_L | HidNpadButton_Down | HidNpadButton_StickR;
 			bool overlayOpen = false;
 
 			std::mutex dataMutex;
@@ -2337,7 +2587,7 @@ namespace tsl {
 			u64 keysDownPending = 0;
 			u64 keysHeld = 0;
 			HidTouchScreenState touchState = { 0 };
-			JoystickPosition joyStickPosLeft = { 0 }, joyStickPosRight = { 0 };
+			HidAnalogStickState joyStickPosLeft = { 0 }, joyStickPosRight = { 0 };
 		};
 
 
