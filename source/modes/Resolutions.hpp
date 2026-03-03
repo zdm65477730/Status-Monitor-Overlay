@@ -23,7 +23,9 @@ private:
 	bool reachedMaxX = false;
 public:
     ResolutionsOverlay() {
-		GetConfigSettings(&settings);
+		tsl::hlp::doWithSDCardHandle([this] {
+			GetConfigSettings(&settings);
+		});
 		switch(settings.setPos) {
 			case 1:
 			case 4:
@@ -43,7 +45,7 @@ public:
 		StartFPSCounterThread();
 		deactivateOriginalFooter = true;
 		tsl::hlp::requestForeground(false);
-		alphabackground = 0x0;
+		IsFrameBackground = false;
 		FullMode = false;
 		TeslaFPS = settings.refreshRate;
 		frametime = 1000000000 / settings.refreshRate;
@@ -52,7 +54,7 @@ public:
 		EndFPSCounterThread();
 		deactivateOriginalFooter = false;
 		tsl::hlp::requestForeground(true);
-		alphabackground = 0xD;
+		IsFrameBackground = true;
 		FullMode = true;
 	}
 
@@ -63,9 +65,8 @@ public:
 
     virtual tsl::elm::Element* createUI() override {
 		rootFrame = new tsl::elm::OverlayFrame("", "");
-		
+
 		auto Status = new tsl::elm::CustomDrawer([this](tsl::gfx::Renderer *renderer, u16 x, u16 y, u16 w, u16 h) {
-			
 			static int base_y = 0;
 			static int base_x = 0;
 			if (!changedPos) switch(settings.setPos) {
@@ -106,7 +107,7 @@ public:
 					base_y = 520;
 					break;	
 			}
-			
+
 			bool ready = false;
 			if (gameStart && NxFps -> API >= 1) {
 				ready = true;
@@ -173,9 +174,9 @@ public:
 			if (ready) {
 				renderer->drawRect(base_x, base_y, m_width, m_height, a(settings.backgroundColor));
 
-				renderer->drawString("Depth:", false, base_x+20, base_y+20, 20, renderer->a(settings.catColor));
+				renderer->drawString("DepthResolutionsOverlayCustomDrawerText"_tr.c_str(), false, base_x+20, base_y+20, 20, renderer->a(settings.catColor));
 				renderer->drawString(Resolutions_c, false, base_x+20, base_y+55, 18, renderer->a(settings.textColor));
-				renderer->drawString("Viewport:", false, base_x+180, base_y+20, 20, renderer->a(settings.catColor));
+				renderer->drawString("ViewportResolutionsOverlayCustomDrawerText"_tr.c_str(), false, base_x+180, base_y+20, 20, renderer->a(settings.catColor));
 				renderer->drawString(Resolutions2_c, false, base_x+180, base_y+55, 18, renderer->a(settings.textColor));
 			}
 			else {
@@ -188,7 +189,7 @@ public:
 						break;
 				}
 				renderer->drawRect(base_x, base_y, m_width, 28, a(settings.backgroundColor));
-				renderer->drawString("Game is not running or it's incompatible.", false, base_x, base_y+20, 18, renderer->a(0xF00F));
+				renderer->drawString("GamaNotRunningOrIncompatibleResolutionsOverlayCustomDrawerText"_tr.c_str(), false, base_x, base_y+20, 18, renderer->a(0xF00F));
 			}
 		});
 
@@ -257,22 +258,22 @@ public:
 			resolutionLookup = false;
 		}
 	}
-	virtual bool handleInput(uint64_t keysDown, uint64_t keysHeld, touchPosition touchInput, JoystickPosition leftJoyStick, JoystickPosition rightJoyStick) override {
+	virtual bool handleInput(uint64_t keysDown, uint64_t keysHeld, const HidTouchState &touchPos, HidAnalogStickState leftJoyStick, HidAnalogStickState rightJoyStick) override {
 		bool m_touchScreen = touchScreen;
 		if (m_touchScreen) {
-			if (*touchInput.delta_time != 0 && (*touchInput.x >= m_base_x && *touchInput.x <= (m_base_x + m_width)) && (*touchInput.y >= m_base_y && *touchInput.y <= (m_base_y + m_height))) {
+			if (touchPos.delta_time != 0 && (touchPos.x >= m_base_x && touchPos.x <= (m_base_x + m_width)) && (touchPos.y >= m_base_y && touchPos.y <= (m_base_y + m_height))) {
 				changingPos = true;
 				changedPos = true;
 			}
-			else if (changingPos && *touchInput.delta_time == 0) {
+			else if (changingPos && touchPos.delta_time == 0) {
 				touch_pos_x = -1;
 				touch_pos_y = -1;
 				changingPos = false;
 				return false;
 			}
 			if (changingPos) {
-				touch_pos_x = *touchInput.x;
-				touch_pos_y = *touchInput.y;
+				touch_pos_x = touchPos.x;
+				touch_pos_y = touchPos.y;
 				if (touch_pos_y >= 704) touch_pos_y = 720;
 				else if (touch_pos_y <= 15) touch_pos_y = 0;
 				if (touch_pos_x >= 1264) touch_pos_x = 1280;

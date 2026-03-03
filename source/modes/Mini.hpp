@@ -32,8 +32,10 @@ private:
 	bool reachedMaxX = false;
 	uint64_t frametime = 1000000000 / 60;
 public:
-    MiniOverlay() { 
-		GetConfigSettings(&settings);
+	MiniOverlay() {
+		tsl::hlp::doWithSDCardHandle([this] {
+			GetConfigSettings(&settings);
+		});
 		FullMode = false;
 		TeslaFPS = settings.refreshRate;
 		systemtickfrequency_impl /= settings.refreshRate;
@@ -45,9 +47,9 @@ public:
 		deactivateOriginalFooter = true;
 		mutexInit(&mutex_BatteryChecker);
 		mutexInit(&mutex_Misc);
-        StartThreads(NULL);
+		StartThreads(NULL);
 		apmGetPerformanceMode(&performanceMode);
-		alphabackground = 0x0;
+		IsFrameBackground = false;
 		tsl::hlp::requestForeground(false);
 		if (performanceMode == ApmPerformanceMode_Normal) {
 			fontsize = settings.handheldFontSize;
@@ -74,7 +76,7 @@ public:
 		CloseThreads();
 		FullMode = true;
 		tsl::hlp::requestForeground(true);
-		alphabackground = 0xD;
+		IsFrameBackground = true;
 		deactivateOriginalFooter = false;
 	}
 
@@ -84,12 +86,10 @@ public:
 	uint8_t resolutionLookup = 0;
 	bool resolutionShow = false;
 
-    virtual tsl::elm::Element* createUI() override {
-
+	virtual tsl::elm::Element* createUI() override {
 		rootFrame = new tsl::elm::OverlayFrame("", "");
 
 		auto Status = new tsl::elm::CustomDrawer([this](tsl::gfx::Renderer *renderer, u16 x, u16 y, u16 w, u16 h) {
-			
 			if (!Initialized) {
 				rectangleWidth = 0;
 				std::pair<u32, u32> dimensions;
@@ -150,28 +150,28 @@ public:
 				entry_count = 0;
 				for (std::string key : tsl::hlp::split(settings.show, '+')) {
 					if (!key.compare("CPU") && !(flags & 1 << 0)) {
-						strcat(print_text, "CPU");
+						strcat(print_text, "CPUItemMiniOverlayCustomDrawerText"_tr.c_str());
 						entry_count++;
 						flags |= (1 << 0);
 					}
 					else if (!key.compare("GPU") && !(flags & 1 << 1)) {
 						if (print_text[0])
 							strcat(print_text, "\n");
-						strcat(print_text, "GPU");
+						strcat(print_text, "GPUItemMiniOverlayCustomDrawerText"_tr.c_str());
 						entry_count++;
 						flags |= (1 << 1);
 					}
 					else if (!key.compare("RAM") && !(flags & 1 << 2)) {
 						if (print_text[0])
 							strcat(print_text, "\n");
-						strcat(print_text, "RAM");
+						strcat(print_text, "RAMItemMiniOverlayCustomDrawerText"_tr.c_str());
 						entry_count++;
 						flags |= (1 << 2);
 					}
 					else if (!key.compare("TEMP") && !(flags & 1 << 3)) {
 						if (print_text[0])
 							strcat(print_text, "\n");
-						strcat(print_text, "TEMP");
+						strcat(print_text, "TEMPItemMiniOverlayCustomDrawerText"_tr.c_str());
 						entry_count++;
 						flags |= (1 << 3);
 					}
@@ -179,29 +179,29 @@ public:
 						if (print_text[0])
 							strcat(print_text, "\n");
 						if (batTimeEstimate >= 0)
-							strcat(print_text, "DRAW");
-						else strcat(print_text, "CHRG");
+							strcat(print_text, "DRAWItemMiniOverlayCustomDrawerText"_tr.c_str());
+						else strcat(print_text, "CHRGItemMiniOverlayCustomDrawerText"_tr.c_str());
 						entry_count++;
 						flags |= (1 << 4);
 					}
 					else if (!key.compare("FAN") && !(flags & 1 << 5)) {
 						if (print_text[0])
 							strcat(print_text, "\n");
-						strcat(print_text, "FAN");
+						strcat(print_text, "FANItemMiniOverlayCustomDrawerText"_tr.c_str());
 						entry_count++;
 						flags |= (1 << 5);
 					}
 					else if (!key.compare("FPS") && !(flags & 1 << 6) && GameRunning) {
 						if (print_text[0])
 							strcat(print_text, "\n");
-						strcat(print_text, "FPS");
+						strcat(print_text, "FPSItemMiniOverlayCustomDrawerText"_tr.c_str());
 						entry_count++;
 						flags |= (1 << 6);
 					}
 					else if (!key.compare("RES") && !(flags & 1 << 7) && GameRunning) {
 						if (print_text[0])
 							strcat(print_text, "\n");
-						strcat(print_text, "RES");
+						strcat(print_text, "RESItemMiniOverlayCustomDrawerText"_tr.c_str());
 						entry_count++;
 						resolutionShow = true;
 						flags |= (1 << 7);
@@ -209,7 +209,7 @@ public:
 					else if (!key.compare("READ") && !(flags & 1 << 8) && GameRunning) {
 						if (print_text[0])
 							strcat(print_text, "\n");
-						strcat(print_text, "READ");
+						strcat(print_text, "READItemMiniOverlayCustomDrawerText"_tr.c_str());
 						entry_count++;
 						flags |= (1 << 8);
 					}
@@ -365,34 +365,34 @@ public:
 		else snprintf(MINI_CPU_Usage3, sizeof(MINI_CPU_Usage3), "%.0lf%%", std::clamp((1.d - ((double)idletick3 / systemtickfrequency_impl)) * 100.d, 0.d, 100.d));
 
 		mutexLock(&mutex_Misc);
-		
+
 		char MINI_CPU_compressed_c[42] = "";
 		if (settings.realFrequencies && realCPU_Hz) {
-			snprintf(MINI_CPU_compressed_c, sizeof(MINI_CPU_compressed_c), 
-				"[%s,%s,%s,%s]@%hu.%hhu", 
-				MINI_CPU_Usage0, MINI_CPU_Usage1, MINI_CPU_Usage2, MINI_CPU_Usage3, 
+			snprintf(MINI_CPU_compressed_c, sizeof(MINI_CPU_compressed_c),
+				"[%s,%s,%s,%s]@%hu.%hhu",
+				MINI_CPU_Usage0, MINI_CPU_Usage1, MINI_CPU_Usage2, MINI_CPU_Usage3,
 				realCPU_Hz / 1000000, (realCPU_Hz / 100000) % 10);
 		}
 		else {
-			snprintf(MINI_CPU_compressed_c, sizeof(MINI_CPU_compressed_c), 
-				"[%s,%s,%s,%s]@%hu.%hhu", 
-				MINI_CPU_Usage0, MINI_CPU_Usage1, MINI_CPU_Usage2, MINI_CPU_Usage3, 
+			snprintf(MINI_CPU_compressed_c, sizeof(MINI_CPU_compressed_c),
+				"[%s,%s,%s,%s]@%hu.%hhu",
+				MINI_CPU_Usage0, MINI_CPU_Usage1, MINI_CPU_Usage2, MINI_CPU_Usage3,
 				CPU_Hz / 1000000, (CPU_Hz / 100000) % 10);
 		}
 		char MINI_GPU_Load_c[14];
 		if (settings.realFrequencies && realGPU_Hz) {
-			snprintf(MINI_GPU_Load_c, sizeof(MINI_GPU_Load_c), 
-				"%hu.%hhu%%@%hu.%hhu", 
+			snprintf(MINI_GPU_Load_c, sizeof(MINI_GPU_Load_c),
+				"%hu.%hhu%%@%hu.%hhu",
 				GPU_Load_u / 10, GPU_Load_u % 10,
 				realGPU_Hz / 1000000, (realGPU_Hz / 100000) % 10);
 		}
 		else {
-			snprintf(MINI_GPU_Load_c, sizeof(MINI_GPU_Load_c), 
-				"%hu.%hhu%%@%hu.%hhu", 
-				GPU_Load_u / 10, GPU_Load_u % 10, 
+			snprintf(MINI_GPU_Load_c, sizeof(MINI_GPU_Load_c),
+				"%hu.%hhu%%@%hu.%hhu",
+				GPU_Load_u / 10, GPU_Load_u % 10,
 				GPU_Hz / 1000000, (GPU_Hz / 100000) % 10);
 		}
-		
+
 		///RAM
 		char MINI_RAM_var_compressed_c[35] = "";
 		if (R_FAILED(sysclkCheck) || !settings.showRAMLoad) {
@@ -407,22 +407,22 @@ public:
 			float RAM_Used_systemunsafe_f = (float)RAM_Used_systemunsafe_u / 1024 / 1024;
 			float RAM_Used_all_f = RAM_Used_application_f + RAM_Used_applet_f + RAM_Used_system_f + RAM_Used_systemunsafe_f;
 			if (settings.realFrequencies && realRAM_Hz) {
-				snprintf(MINI_RAM_var_compressed_c, sizeof(MINI_RAM_var_compressed_c), 
-					"%.0f/%.0fMB@%hu.%hhu", 
-					RAM_Used_all_f, RAM_Total_all_f, 
+				snprintf(MINI_RAM_var_compressed_c, sizeof(MINI_RAM_var_compressed_c),
+					"%.0f/%.0fMB@%hu.%hhu",
+					RAM_Used_all_f, RAM_Total_all_f,
 					realRAM_Hz / 1000000, (realRAM_Hz / 100000) % 10);
 			}
 			else {
-				snprintf(MINI_RAM_var_compressed_c, sizeof(MINI_RAM_var_compressed_c), 
+				snprintf(MINI_RAM_var_compressed_c, sizeof(MINI_RAM_var_compressed_c),
 					"%.0f/%.0fMB@%hu.%hhu",
-					RAM_Used_all_f, RAM_Total_all_f, 
+					RAM_Used_all_f, RAM_Total_all_f,
 					RAM_Hz / 1000000, (RAM_Hz / 100000) % 10);
 			}
 		}
 		else {
 			int RAM_GPU_Load = ramLoad[SysClkRamLoad_All] - ramLoad[SysClkRamLoad_Cpu];
 			if (settings.realFrequencies && realRAM_Hz) {
-				snprintf(MINI_RAM_var_compressed_c, sizeof(MINI_RAM_var_compressed_c), 
+				snprintf(MINI_RAM_var_compressed_c, sizeof(MINI_RAM_var_compressed_c),
 					"%hu.%hhu%%(%hu.%hhu | %hu.%hhu)@%hu.%hhu", 
 					ramLoad[SysClkRamLoad_All] / 10, ramLoad[SysClkRamLoad_All] % 10,
 					ramLoad[SysClkRamLoad_Cpu] / 10, ramLoad[SysClkRamLoad_Cpu] % 10,
@@ -430,7 +430,7 @@ public:
 					realRAM_Hz / 1000000, (realRAM_Hz / 100000) % 10);
 			}
 			else {
-				snprintf(MINI_RAM_var_compressed_c, sizeof(MINI_RAM_var_compressed_c), 
+				snprintf(MINI_RAM_var_compressed_c, sizeof(MINI_RAM_var_compressed_c),
 					"%hu.%hhu%%(%hu.%hhu | %hu.%hhu)@%hu.%hhu", 
 					ramLoad[SysClkRamLoad_All] / 10, ramLoad[SysClkRamLoad_All] % 10,
 					ramLoad[SysClkRamLoad_Cpu] / 10, ramLoad[SysClkRamLoad_Cpu] % 10,
@@ -438,7 +438,7 @@ public:
 					RAM_Hz / 1000000, (RAM_Hz / 100000) % 10);
 			}
 		}
-		
+
 		///Thermal
 		snprintf(skin_temperature_c, sizeof skin_temperature_c, 
 			"%2.1f\u00B0C/%2.1f\u00B0C/%hu.%hhu\u00B0C", 
@@ -514,7 +514,7 @@ public:
 		else if (!GameRunning && resolutionLookup != 0) {
 			resolutionLookup = 0;
 		}
-		
+
 		///FPS
 		char Temp[256] = "";
 		uint32_t flags = 0;
@@ -524,42 +524,42 @@ public:
 					strcat(Temp, "\n");
 				}
 				strcat(Temp, MINI_CPU_compressed_c);
-				flags |= 1 << 0;			
+				flags |= 1 << 0;
 			}
 			else if (!key.compare("GPU") && !(flags & 1 << 1)) {
 				if (Temp[0]) {
 					strcat(Temp, "\n");
 				}
 				strcat(Temp, MINI_GPU_Load_c);
-				flags |= 1 << 1;			
+				flags |= 1 << 1;
 			}
 			else if (!key.compare("RAM") && !(flags & 1 << 2)) {
 				if (Temp[0]) {
 					strcat(Temp, "\n");
 				}
 				strcat(Temp, MINI_RAM_var_compressed_c);
-				flags |= 1 << 2;			
+				flags |= 1 << 2;
 			}
 			else if (!key.compare("TEMP") && !(flags & 1 << 3)) {
 				if (Temp[0]) {
 					strcat(Temp, "\n");
 				}
 				strcat(Temp, skin_temperature_c);
-				flags |= 1 << 3;			
+				flags |= 1 << 3;
 			}
 			else if (!key.compare("FAN") && !(flags & 1 << 4)) {
 				if (Temp[0]) {
 					strcat(Temp, "\n");
 				}
 				strcat(Temp, Rotation_SpeedLevel_c);
-				flags |= 1 << 4;			
+				flags |= 1 << 4;
 			}
 			else if (!key.compare("DRAW") && !(flags & 1 << 5)) {
 				if (Temp[0]) {
 					strcat(Temp, "\n");
 				}
 				strcat(Temp, SoCPCB_temperature_c);
-				flags |= 1 << 5;			
+				flags |= 1 << 5;
 			}
 			else if (!key.compare("FPS") && !(flags & 1 << 6) && GameRunning) {
 				if (Temp[0]) {
@@ -572,7 +572,7 @@ public:
 				}
 				else snprintf(Temp_s, sizeof(Temp_s), "%2.1f", m_FPSavg);
 				strcat(Temp, Temp_s);
-				flags |= 1 << 6;			
+				flags |= 1 << 6;
 			}
 			else if (!key.compare("RES") && !(flags & 1 << 7) && GameRunning) {
 				if (Temp[0]) {
@@ -619,32 +619,32 @@ public:
 			snprintf(remainingBatteryLife, sizeof remainingBatteryLife, "%d:%02d", batTimeEstimate / 60, batTimeEstimate % 60);
 		}
 		else snprintf(remainingBatteryLife, sizeof remainingBatteryLife, "-:--");
-		
+
 		snprintf(SoCPCB_temperature_c, sizeof SoCPCB_temperature_c, "%0.2lfW[%s]", PowerConsumption, remainingBatteryLife);
 		mutexUnlock(&mutex_BatteryChecker);
 
 	}
 
 	void FPSLock() {
-		
+
 	}
 
-	virtual bool handleInput(uint64_t keysDown, uint64_t keysHeld, touchPosition touchInput, JoystickPosition leftJoyStick, JoystickPosition rightJoyStick) override {
+	virtual bool handleInput(uint64_t keysDown, uint64_t keysHeld, const HidTouchState &touchPos, HidAnalogStickState leftJoyStick, HidAnalogStickState rightJoyStick) override {
 		bool m_touchScreen = touchScreen;
 		if (m_touchScreen) {
-			if (*touchInput.delta_time != 0 && (*touchInput.x >= m_base_x && *touchInput.x <= (m_base_x + m_width)) && (*touchInput.y >= m_base_y && *touchInput.y <= (m_base_y + m_height))) {
+			if (touchPos.delta_time != 0 && (touchPos.x >= m_base_x && touchPos.x <= (m_base_x + m_width)) && (touchPos.y >= m_base_y && touchPos.y <= (m_base_y + m_height))) {
 				changingPos = true;
 				changedPos = true;
 			}
-			else if (changingPos && *touchInput.delta_time == 0) {
+			else if (changingPos && touchPos.delta_time == 0) {
 				touch_pos_x = -1;
 				touch_pos_y = -1;
 				changingPos = false;
 				return false;
 			}
 			if (changingPos) {
-				touch_pos_x = *touchInput.x;
-				touch_pos_y = *touchInput.y;
+				touch_pos_x = touchPos.x;
+				touch_pos_y = touchPos.y;
 				if (touch_pos_y >= 704) touch_pos_y = 720;
 				else if (touch_pos_y <= 15) touch_pos_y = 0;
 				if (touch_pos_x >= 1264) touch_pos_x = 1280;
