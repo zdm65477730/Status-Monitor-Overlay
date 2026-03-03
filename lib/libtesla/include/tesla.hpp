@@ -50,6 +50,8 @@ float M_PI = 3.14159265358979323846;
 
 #include <switch.h>
 #include <cstdlib>
+#include <unordered_map>
+#include <fstream>
 #include <filesystem>
 
 extern "C" {
@@ -59,6 +61,7 @@ extern "C" {
 }
 
 #include <stdlib.h>
+#include <json.hpp>
 #include <strings.h>
 #include <math.h>
 
@@ -112,9 +115,17 @@ bool isValidHexColor(const std::string& hexColor) {
 
 #define ASSERT_EXIT(x) if (R_FAILED(x)) std::exit(1)
 #define ASSERT_FATAL(x) if (Result res = x; R_FAILED(res)) fatalThrow(res)
-	
+
+#define TSL_R_TRY(resultExpr)           \
+    ({                                  \
+        const auto result = resultExpr; \
+        if (R_FAILED(result)) {         \
+            return result;              \
+        }                               \
+    })
+
 u8 TeslaFPS = 0;
-u8 alphabackground = 0xD;
+bool IsFrameBackground = true;
 bool FullMode = true;
 PadState pad;
 uint16_t framebufferWidth = 448;
@@ -235,6 +246,19 @@ namespace tsl {
 			f();
 			smExit();
 		}
+
+        /**
+         * @brief Wrapper for sd card access using stdio
+         * @note Consider using raw fs calls instead as they are faster and need less space
+         *
+         * @param f wrapped function
+         */
+        template<typename F>
+        static inline void doWithSDCardHandle(F f) {
+            fsdevMountSdmc();
+            f();
+            fsdevUnmountDevice("sdmc");
+        }
 
 		/**
 		 * @brief libnx hid:sys shim that gives or takes away frocus to or from the process with the given aruid
@@ -387,6 +411,160 @@ namespace tsl {
 			else return 0;
 		}
 
+	}
+
+	namespace tr {
+		namespace {
+			constexpr const char* DefaultUnknownString = "???";
+			constexpr const char* DefaultBaseLang = "en";
+
+			enum class SystemLanguage {
+				Unknown,
+				ja, en, fr, de, it, es,
+				zh_Hans, ko, nl, pt, ru, zh_Hant
+			};
+
+			using LanguageStrings = std::unordered_map<std::string, std::string>;
+			LanguageStrings g_SystemLanguageStrings;
+			SystemLanguage g_baseLang = SystemLanguage::Unknown;
+
+			constexpr const char* LangEnumToString(SystemLanguage lang) noexcept {
+				switch (lang) {
+					case SystemLanguage::ja:       return "ja";
+					case SystemLanguage::en:       return "en";
+					case SystemLanguage::fr:       return "fr";
+					case SystemLanguage::de:       return "de";
+					case SystemLanguage::it:       return "it";
+					case SystemLanguage::es:       return "es";
+					case SystemLanguage::zh_Hans:  return "zh-Hans";
+					case SystemLanguage::ko:       return "ko";
+					case SystemLanguage::nl:       return "nl";
+					case SystemLanguage::pt:       return "pt";
+					case SystemLanguage::ru:       return "ru";
+					case SystemLanguage::zh_Hant:  return "zh-Hant";
+					default:                       return DefaultBaseLang;
+				}
+			}
+
+			Result GetSysBaseLang(SystemLanguage &sysBaseLang) {
+				if (g_baseLang != SystemLanguage::Unknown) {
+					sysBaseLang = g_baseLang;
+					return 0;
+				}
+
+				Result rc = 0;
+				if (R_SUCCEEDED(rc = setInitialize())) {
+					u64 languageCode = 0;
+					if (R_SUCCEEDED(rc = setGetSystemLanguage(&languageCode))) {
+						SetLanguage language = SetLanguage_ENUS;
+						if (R_SUCCEEDED(rc = setMakeLanguage(languageCode, &language))) {
+							switch (language) {
+								case SetLanguage_JA:       g_baseLang = SystemLanguage::ja; break;
+								case SetLanguage_ENUS:
+								case SetLanguage_ENGB:     g_baseLang = SystemLanguage::en; break;
+								case SetLanguage_FR:
+								case SetLanguage_FRCA:     g_baseLang = SystemLanguage::fr; break;
+								case SetLanguage_DE:       g_baseLang = SystemLanguage::de; break;
+								case SetLanguage_IT:       g_baseLang = SystemLanguage::it; break;
+								case SetLanguage_ES:
+								case SetLanguage_ES419:    g_baseLang = SystemLanguage::es; break;
+								case SetLanguage_ZHCN:
+								case SetLanguage_ZHHANS:   g_baseLang = SystemLanguage::zh_Hans; break;
+								case SetLanguage_KO:       g_baseLang = SystemLanguage::ko; break;
+								case SetLanguage_NL:       g_baseLang = SystemLanguage::nl; break;
+								case SetLanguage_PT:
+								case SetLanguage_PTBR:     g_baseLang = SystemLanguage::pt; break;
+								case SetLanguage_RU:       g_baseLang = SystemLanguage::ru; break;
+								case SetLanguage_ZHTW:
+								case SetLanguage_ZHHANT:   g_baseLang = SystemLanguage::zh_Hant; break;
+								default:                   g_baseLang = SystemLanguage::en; break;
+							}
+						}
+					}
+					setExit();
+				}
+
+				if (g_baseLang == SystemLanguage::Unknown)
+					g_baseLang = SystemLanguage::en;
+
+				sysBaseLang = g_baseLang;
+				return rc;
+			}
+
+			void fillLangStrings(const nlohmann::json &json, LanguageStrings &out_strs) {
+				if (json.empty() || !json.is_object()) return;
+
+				for (const auto& [key, value] : json.items()) {
+					if (!key.empty() && value.is_string()) {
+						const std::string& val = value.get<std::string>();
+						out_strs[key] = val.empty() ? DefaultUnknownString : val;
+					}
+				}
+			}
+
+			bool LoadLanguageStrings(const std::string& langPath, SystemLanguage lang, LanguageStrings& out_strs) {
+				std::string langFilePath = langPath;
+				if (!langFilePath.empty() && langFilePath.back() != '/')
+					langFilePath += '/';
+				langFilePath += LangEnumToString(lang);
+				langFilePath += ".json";
+
+				if (!std::filesystem::exists(langFilePath))
+					return true;
+
+				std::ifstream ifs(langFilePath, std::ios::binary);
+				if (!ifs) return false;
+
+				nlohmann::json lang_json = nlohmann::json::parse(ifs);
+				fillLangStrings(lang_json, out_strs);
+				return true;
+			}
+
+			bool LoadTrans(const std::string& langPath, LanguageStrings& out_strs) {
+				SystemLanguage base_lang = SystemLanguage::Unknown;
+				if (R_SUCCEEDED(GetSysBaseLang(base_lang))) {
+					return LoadLanguageStrings(langPath, base_lang, out_strs);
+				}
+				return false;
+			}
+
+			std::string Translate(std::string_view key) {
+				if (key.empty())
+					return DefaultUnknownString;
+
+				auto it = g_SystemLanguageStrings.find(std::string(key));
+				if (it != g_SystemLanguageStrings.end() && !it->second.empty()) {
+					return it->second;
+				}
+				return DefaultUnknownString;
+			}
+		}
+
+		inline Result GetSysBaseLanguage(std::string &base_lang) {
+			SystemLanguage lang;
+			Result rc = GetSysBaseLang(lang);
+			base_lang = LangEnumToString(lang);
+			return rc;
+		}
+
+		inline bool InitTrans(const std::string &langPath, const std::string &defaultTrans) {
+			if (langPath.empty() || defaultTrans.empty())
+				return false;
+
+			g_SystemLanguageStrings.clear();
+
+			nlohmann::json default_json = nlohmann::json::parse(defaultTrans);
+			fillLangStrings(default_json, g_SystemLanguageStrings);
+
+			return LoadTrans(langPath, g_SystemLanguageStrings);
+		}
+	}
+
+	inline std::string operator ""_tr(const char *key_lit, size_t key_lit_size) noexcept {
+		if (!key_lit || key_lit_size == 0)
+			return tr::DefaultUnknownString;
+
+		return tr::Translate(std::string_view(key_lit, key_lit_size));
 	}
 
 	// Renderer
@@ -761,63 +939,115 @@ namespace tsl {
 			 * @param color Text color. Use transparent color to skip drawing and only get the string's dimensions
 			 * @return Dimensions of drawn string
 			 */
-			std::pair<u32, u32> drawString(const char* string, bool monospace, u32 x, u32 y, float fontSize, Color color) {
-				const size_t stringLength = strlen(string);
+			std::pair<u32, u32> drawString(const char* string, bool monospace, s32 x, s32 y, float fontSize, Color color, ssize_t maxWidth = 0) {
+				s32 maxX = x;
+				s32 currX = x;
+				s32 currY = y;
 
-				u32 maxX = x;
-				u32 currX = x;
-				u32 currY = y;
-				u32 prevCharacter = 0;
+				struct Glyph {
+					stbtt_fontinfo *currFont;
+					float currFontSize;
+					int bounds[4];
+					int xAdvance;
+					u8 *glyphBmp;
+					int width, height;
+				};
 
-				u32 i = 0;
+				static std::unordered_map<u64, Glyph> s_glyphCache;
 
-				do {
-					u32 currCharacter;
-					ssize_t codepointWidth = decode_utf8(&currCharacter, reinterpret_cast<const u8*>(string + i));
+				if (string == nullptr) {
+					return {0, 0};
+				}
 
-					if (codepointWidth <= 0)
+				if (*string == '\0') {
+					return {0, 0};
+				}
+
+				while (true) {
+					if (maxWidth > 0 && maxWidth < (currX - x))
 						break;
 
-					i += codepointWidth;
+					u32 currCharacter;
+					ssize_t codepointWidth = decode_utf8(&currCharacter, reinterpret_cast<const u8*>(string));
 
-					stbtt_fontinfo *currFont = nullptr;
+					if (codepointWidth <= 0 || currCharacter == '\0') {
+						break;
+					}
 
-					if (stbtt_FindGlyphIndex(&this->m_extFont, currCharacter))
-						currFont = &this->m_extFont;
-					else
-						currFont = &this->m_stdFont;
-
-					float currFontSize = stbtt_ScaleForPixelHeight(currFont, fontSize);
-					currX += currFontSize * stbtt_GetCodepointKernAdvance(currFont, prevCharacter, currCharacter);
-
-					int bounds[4] = { 0 };
-					stbtt_GetCodepointBitmapBoxSubpixel(currFont, currCharacter, currFontSize, currFontSize,
-														0, 0, &bounds[0], &bounds[1], &bounds[2], &bounds[3]);
-
-					int xAdvance = 0, yAdvance = 0;
-					stbtt_GetCodepointHMetrics(currFont, monospace ? 'W' : currCharacter, &xAdvance, &yAdvance);
+					string += codepointWidth;
 
 					if (currCharacter == '\n') {
 						maxX = std::max(currX, maxX);
-
 						currX = x;
 						currY += fontSize;
-
 						continue;
 					}
 
-				   if (!std::iswspace(currCharacter) && fontSize > 0 && color.a != 0x0)
-						this->drawGlyph(currCharacter, currX + bounds[0], currY + bounds[1], color, currFont, currFontSize);
+					u64 key = (static_cast<u64>(currCharacter) << 32) | static_cast<u64>(monospace) << 31 | static_cast<u64>(std::bit_cast<u32>(fontSize));
 
-					currX += xAdvance * currFontSize;
-					
-				} while (i < stringLength);
+					Glyph *glyph = nullptr;
+
+					auto it = s_glyphCache.find(key);
+					if (it == s_glyphCache.end()) {
+						glyph = &s_glyphCache.emplace(key, Glyph()).first->second;
+
+						if (stbtt_FindGlyphIndex(&this->m_extFont, currCharacter))
+							glyph->currFont = &this->m_extFont;
+						else if(this->m_hasLocalFont && stbtt_FindGlyphIndex(&this->m_stdFont, currCharacter)==0)
+							glyph->currFont = &this->m_localFont;
+						else
+							glyph->currFont = &this->m_stdFont;
+
+						glyph->currFontSize = stbtt_ScaleForPixelHeight(glyph->currFont, fontSize);
+
+						stbtt_GetCodepointBitmapBoxSubpixel(glyph->currFont, currCharacter, glyph->currFontSize, glyph->currFontSize,
+															0, 0, &glyph->bounds[0], &glyph->bounds[1], &glyph->bounds[2], &glyph->bounds[3]);
+
+						int yAdvance = 0;
+						stbtt_GetCodepointHMetrics(glyph->currFont, monospace ? 'W' : currCharacter, &glyph->xAdvance, &yAdvance);
+
+						glyph->glyphBmp = stbtt_GetCodepointBitmap(glyph->currFont, glyph->currFontSize, glyph->currFontSize, currCharacter, &glyph->width, &glyph->height, nullptr, nullptr);
+					} else {
+						glyph = &it->second;
+					}
+
+					if (glyph->glyphBmp != nullptr && !std::iswspace(currCharacter) && fontSize > 0 && color.a != 0x0) {
+						auto x = currX + glyph->bounds[0];
+						auto y = currY + glyph->bounds[1];
+						for (s32 bmpY = 0; bmpY < glyph->height; bmpY++) {
+							for (s32 bmpX = 0; bmpX < glyph->width; bmpX++) {
+								auto bmpColor = glyph->glyphBmp[glyph->width * bmpY + bmpX] >> 4;
+								if (bmpColor == 0xF) {
+									this->setPixel(x + bmpX, y + bmpY, color);
+								} else if (bmpColor != 0x0) {
+									Color tmpColor = color;
+									tmpColor.a = bmpColor * (float(tmpColor.a) / 0xF);
+									this->setPixelBlendDst(x + bmpX, y + bmpY, tmpColor);
+								}
+							}
+						}
+					}
+
+					currX += static_cast<s32>(glyph->xAdvance * glyph->currFontSize);
+
+					if (*string == '\0') {
+						break;
+					}
+				}
 
 				maxX = std::max(currX, maxX);
 
 				return { maxX - x, currY - y };
 			}
-			
+
+            /**
+             * @brief Get the main frame button display string
+             *
+             * @return Main button display text
+             */
+            std::string getMainFrameButtonText() {
+                return this->m_MainFrameButtonText;
+            }
 		private:
 			Renderer() {}
 
@@ -843,6 +1073,10 @@ namespace tsl {
 				Renderer::s_opacity = opacity;
 			}
 
+            /**
+             * @brief Main frame button text
+             */
+            std::string m_MainFrameButtonText{"\uE0E1  Back     \uE0E0  OK"};
 			bool m_initialized = false;
 			ViDisplay m_display;
 			ViLayer m_layer;
@@ -855,7 +1089,8 @@ namespace tsl {
 			bool m_scissoring = false;
 			u16 m_scissorBounds[4];
 
-			stbtt_fontinfo m_stdFont, m_extFont;
+			stbtt_fontinfo m_stdFont, m_localFont, m_extFont;
+            bool m_hasLocalFont = false;
 
 			static inline float s_opacity = 1.0F;
 
@@ -1019,26 +1254,93 @@ namespace tsl {
 			 * @return Result
 			 */
 			Result initFonts() {
-				Result res;
+                static PlFontData stdFontData, localFontData, extFontData;
 
-				static PlFontData stdFontData, extFontData;
+                // Nintendo's default font
+                TSL_R_TRY(plGetSharedFontByType(&stdFontData, PlSharedFontType_Standard));
 
-				// Nintendo's default font
-				if(R_FAILED(res = plGetSharedFontByType(&stdFontData, PlSharedFontType_Standard)))
-					return res;
+                u8 *fontBuffer = reinterpret_cast<u8*>(stdFontData.address);
+                stbtt_InitFont(&this->m_stdFont, fontBuffer, stbtt_GetFontOffsetForIndex(fontBuffer, 0));
 
-				u8 *fontBuffer = reinterpret_cast<u8*>(stdFontData.address);
-				stbtt_InitFont(&this->m_stdFont, fontBuffer, stbtt_GetFontOffsetForIndex(fontBuffer, 0));
-				
-				// Nintendo's extended font containing a bunch of icons
-				if(R_FAILED(res = plGetSharedFontByType(&extFontData, PlSharedFontType_NintendoExt)))
-					return res;
+                // Nintendo's extended font containing a bunch of icons
+                TSL_R_TRY(plGetSharedFontByType(&extFontData, PlSharedFontType_NintendoExt));
 
-				fontBuffer = reinterpret_cast<u8*>(extFontData.address);
-				stbtt_InitFont(&this->m_extFont, fontBuffer, stbtt_GetFontOffsetForIndex(fontBuffer, 0));
+                fontBuffer = reinterpret_cast<u8*>(extFontData.address);
+                stbtt_InitFont(&this->m_extFont, fontBuffer, stbtt_GetFontOffsetForIndex(fontBuffer, 0));
 
-				return res;
-			}
+                if(R_SUCCEEDED(setInitialize())) {
+                    u64 languageCode;
+                    this->m_hasLocalFont = false;
+                    if (R_SUCCEEDED(setGetSystemLanguage(&languageCode))) {
+                        SetLanguage setLanguage{SetLanguage_ENUS};
+                        if (R_SUCCEEDED(setMakeLanguage(languageCode, &setLanguage))) {
+                            switch (setLanguage) {
+                            case SetLanguage_JA:
+                                    this->m_MainFrameButtonText = "\uE0E1  戻る     \uE0E0  確認";
+                                break;
+                            case SetLanguage_ENUS:
+                            case SetLanguage_ENGB:
+                                    this->m_MainFrameButtonText = "\uE0E1  Back     \uE0E0  OK";
+                                break;
+                            case SetLanguage_FR:
+                            case SetLanguage_FRCA:
+                                    this->m_MainFrameButtonText = "\uE0E1  Retour     \uE0E0  Confirmation";
+                                break;
+                            case SetLanguage_DE:
+                                    this->m_MainFrameButtonText = "\uE0E1  Zurück     \uE0E0  Bestätigen";
+                                break;
+                            case SetLanguage_IT:
+                                    this->m_MainFrameButtonText = "\uE0E1  Ritorno     \uE0E0  Conferma";
+                                break;
+                            case SetLanguage_ES:
+                            case SetLanguage_ES419:
+                                    this->m_MainFrameButtonText = "\uE0E1  Return     \uE0E0  Confirmar";
+                                break;
+                            case SetLanguage_ZHCN:
+                            case SetLanguage_ZHHANS:
+                                if(R_SUCCEEDED(plGetSharedFontByType(&localFontData, PlSharedFontType_ChineseSimplified))) {
+                                    this->m_hasLocalFont = true;
+                                    this->m_MainFrameButtonText = "\uE0E1  返回     \uE0E0  确认";
+                                }
+                                break;
+                            case SetLanguage_KO:
+                                if(R_SUCCEEDED(plGetSharedFontByType(&localFontData, PlSharedFontType_KO))) {
+                                    this->m_hasLocalFont = true;
+                                    this->m_MainFrameButtonText = "\uE0E1  뒤로     \uE0E0  확인";
+                                }
+                                break;
+                            case SetLanguage_NL:
+                                    this->m_MainFrameButtonText = "\uE0E1  Terugkeer     \uE0E0  Bevestigen";
+                                break;
+                            case SetLanguage_PT:
+                            case SetLanguage_PTBR:
+                                    this->m_MainFrameButtonText = "\uE0E1  Retorno     \uE0E0  Confirmar";
+                                break;
+                            case SetLanguage_RU:
+                                    this->m_MainFrameButtonText = "\uE0E1  возвращение      \uE0E0  подтверждение ";
+                                break;
+                            case SetLanguage_ZHTW:
+                            case SetLanguage_ZHHANT:
+                                if(R_SUCCEEDED(plGetSharedFontByType(&localFontData, PlSharedFontType_ChineseTraditional))) {
+                                    this->m_hasLocalFont = true;
+                                    this->m_MainFrameButtonText = "\uE0E1  返回     \uE0E0  確認";
+                                }
+                                break;
+                            default:
+                                this->m_hasLocalFont = false;
+                                break;
+                            }
+                            if (this->m_hasLocalFont) {
+                                fontBuffer = reinterpret_cast<u8*>(localFontData.address);
+                                stbtt_InitFont(&this->m_localFont, fontBuffer, stbtt_GetFontOffsetForIndex(fontBuffer, 0));
+                            }
+                        }
+                    }
+                    setExit();
+                }
+
+                return 0;
+            }
 			
 			/**
 			 * @brief Start a new frame
@@ -1438,13 +1740,13 @@ namespace tsl {
 			}
 
 			virtual void draw(gfx::Renderer *renderer) override {
-				renderer->fillScreen(a({ 0x0, 0x0, 0x0, alphabackground }));
+				renderer->fillScreen(a({ 0x0, 0x0, 0x0, IsFrameBackground ? static_cast<u8>(0xD) : static_cast<u8>(0x0)}));
 
 				renderer->drawString(this->m_title.c_str(), false, 20, 50, 30, a(defaultTextColor));
 				renderer->drawString(this->m_subtitle.c_str(), false, 20, 70, 15, a(defaultTextColor));
 
 				if (FullMode == true) renderer->drawRect(15, 720 - 73, tsl::cfg::FramebufferWidth - 30, 1, a(defaultTextColor));
-				if (!deactivateOriginalFooter) renderer->drawString("\uE0E1  Back     \uE0E0  OK", false, 30, 693, 23, a(defaultTextColor));
+				if (!deactivateOriginalFooter) renderer->drawString(renderer->getMainFrameButtonText().c_str(), false, 30, 693, 23, a(defaultTextColor));
 
 				if (this->m_contentElement != nullptr)
 					this->m_contentElement->frame(renderer);
