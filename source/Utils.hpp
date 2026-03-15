@@ -167,8 +167,8 @@ struct NxFpsSharedBlock {
 		struct {
 			bool handheld: 1;
 			bool docked: 1;
-			unsigned int reserved: 6;
-		} NX_PACKED ds;
+			bool reserved: 6;
+		} ds;
 		uint8_t general;
 	} displaySync;
 	resolutionCalls renderCalls[8];
@@ -180,7 +180,10 @@ struct NxFpsSharedBlock {
 	float readSpeedPerSecond;
 	uint8_t FPSlockedDocked;
 	uint64_t frameNumber;
+	int8_t expectedSetBuffers;
 } NX_PACKED;
+
+static_assert(sizeof(NxFpsSharedBlock) == 174);
 
 NxFpsSharedBlock* NxFps = 0;
 bool GameRunning = false;
