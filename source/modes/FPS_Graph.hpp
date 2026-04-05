@@ -310,7 +310,7 @@ public:
 
 	virtual bool handleInput(uint64_t keysDown, uint64_t keysHeld, const HidTouchState &touchPos, HidAnalogStickState leftJoyStick, HidAnalogStickState rightJoyStick) override {
 		bool m_touchScreen = touchScreen;
-		if (m_touchScreen) {
+		if (__builtin_expect(m_touchScreen, false)) {
 			if (touchPos.delta_time != 0 && (touchPos.x >= m_base_x && touchPos.x <= (m_base_x + m_width)) && (touchPos.y >= m_base_y && touchPos.y <= (m_base_y + m_height))) {
 				changingPos = true;
 				changedPos = true;
@@ -331,7 +331,7 @@ public:
 			}
 		}
 		static uint64_t last_time = 0;
-		if (!last_time) {
+		if (__builtin_expect(!last_time, 0)) {
 			last_time = armTicksToNs(svcGetSystemTick());
 		}
 		else if (!changingPos) {
@@ -344,7 +344,7 @@ public:
 					if (m_touchScreen && hidGetTouchScreenStates(&state, 1) && state.count && (state.touches[0].x >= m_base_x && state.touches[0].x <= (m_base_x + m_width)) && (state.touches[0].y >= m_base_y && state.touches[0].y <= (m_base_y + m_height))) {
 						break;
 					}
-					if (isKeyComboPressed(padGetButtons(&pad), padGetButtonsDown(&pad), mappedButtons)) {
+					if (__builtin_expect(isKeyComboPressed(padGetButtons(&pad), padGetButtonsDown(&pad), mappedButtons), false)) {
 						TeslaFPS = 0;
 						tsl::goBack();
 						return true;

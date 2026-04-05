@@ -389,7 +389,7 @@ public:
 	virtual bool handleInput(uint64_t keysDown, uint64_t keysHeld, const HidTouchState &touchPos, HidAnalogStickState leftJoyStick, HidAnalogStickState rightJoyStick) override {
 		if (!TeslaFPS) TeslaFPS = settings.refreshRate;
 		static uint64_t last_time = 0;
-		if (!last_time) {
+		if (__builtin_expect(!last_time, 0)) {
 			last_time = armTicksToNs(svcGetSystemTick());
 		}
 		else {
@@ -398,7 +398,7 @@ public:
 			if (delta < frametime) {
 				uint64_t time_delta = frametime - delta;
 				while (time_delta > 1000000) {
-					if (isKeyComboPressed(padGetButtons(&pad), padGetButtonsDown(&pad), mappedButtons)) {
+					if (__builtin_expect(isKeyComboPressed(padGetButtons(&pad), padGetButtonsDown(&pad), mappedButtons), false)) {
 						TeslaFPS = 0;
 						tsl::goBack();
 						return true;
