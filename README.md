@@ -59,4 +59,4 @@ A: There are few possible explanations:
 
 Q: When opening Status Monitor overlays stop responding, or something that I am trying to open while Status Monitor is opened is freezing (f.e. Album or HB Menu). How to fix this?
 
-A: Issue comes from too much sysmodules accessing sdcard at once. You must limit amount of sysmodules that have such access (you can free one session by disabling logs in SaltyNX-Tool).
+A: This is related to SaltyNX, issue comes from too much sysmodules accessing sdcard at once. You must either update SaltyNX to at least 1.8.0 or limit amount of sysmodules that have such access (you can free one session by disabling logs in SaltyNX-Tool).
