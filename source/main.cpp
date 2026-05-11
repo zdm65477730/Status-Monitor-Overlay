@@ -256,14 +256,27 @@ public:
 				}
 				else sysclkCheck = 0;
 			}
+			else if (hocclkIpcRunning() && R_SUCCEEDED(hocclkIpcInitialize())) {
+				uint32_t hocClkApiVer = 0;
+				hocclkIpcGetAPIVersion(&hocClkApiVer);
+				if (hocClkApiVer < 2) {
+					hocclkIpcExit();
+				}
+				else hocclkCheck = 0;
+			}
 		});
 		Hinted = envIsSyscallHinted(0x6F);
+    	hidGetSixAxisSensorHandles(&sixaxisHandles[Controller_ProController], 1, HidNpadIdType_No1,      HidNpadStyleTag_NpadFullKey);
+    	hidGetSixAxisSensorHandles(&sixaxisHandles[Controller_JoyConL], 2, HidNpadIdType_No1,      HidNpadStyleTag_NpadJoyDual);
 	}
 
 	virtual void exitServices() override {
 		CloseThreads(true);
 		if (R_SUCCEEDED(sysclkCheck)) {
 			sysclkIpcExit();
+		}
+		else if (R_SUCCEEDED(hocclkCheck)) {
+			hocclkIpcExit();
 		}
 		shmemClose(&_sharedmemory);
 		//Exit services
@@ -323,8 +336,18 @@ public:
 				}
 				else sysclkCheck = 0;
 			}
+			else if (hocclkIpcRunning() && R_SUCCEEDED(hocclkIpcInitialize())) {
+				uint32_t hocClkApiVer = 0;
+				hocclkIpcGetAPIVersion(&hocClkApiVer);
+				if (hocClkApiVer < 2) {
+					hocclkIpcExit();
+				}
+				else hocclkCheck = 0;
+			}
 		});
 		Hinted = envIsSyscallHinted(0x6F);
+    	hidGetSixAxisSensorHandles(&sixaxisHandles[0], 1, HidNpadIdType_No1,      HidNpadStyleTag_NpadFullKey);
+    	hidGetSixAxisSensorHandles(&sixaxisHandles[1], 2, HidNpadIdType_No1,      HidNpadStyleTag_NpadJoyDual);
 	}
 
 	virtual void exitServices() override {
@@ -332,6 +355,9 @@ public:
 		shmemClose(&_sharedmemory);
 		if (R_SUCCEEDED(sysclkCheck)) {
 			sysclkIpcExit();
+		}
+		else if (R_SUCCEEDED(hocclkCheck)) {
+			hocclkIpcExit();
 		}
 		//Exit services
 		clkrstExit();
