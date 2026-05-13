@@ -113,7 +113,7 @@ public:
 						renderer->drawString(GPU_Hz_c, false, COMMON_MARGIN, height_offset, 15, renderer->a(0xFFFF));
 
 					}
-					if (realCPU_Hz && settings.showRealFreqs) {
+					if (realGPU_Hz && settings.showRealFreqs) {
 						renderer->drawString(RealGPU_Hz_c, false, COMMON_MARGIN, height_offset - 15, 15, renderer->a(0xFFFF));
 						if (settings.showDeltas && settings.showTargetFreqs) {
 							renderer->drawString(DeltaGPU_c, false, COMMON_MARGIN + 230, height_offset - 7, 15, renderer->a(0xFFFF));
