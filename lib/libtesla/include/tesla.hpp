@@ -2385,8 +2385,6 @@ namespace tsl {
 			// Parse Tesla settings
 			impl::parseOverlaySettings(shData->launchCombo);
 
-			padConfigureInput(1, HidNpadStyleSet_NpadStandard);
-
 			padInitializeAny(&pad);
 
 			hidInitializeTouchScreen();
