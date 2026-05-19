@@ -212,8 +212,8 @@ uint8_t refreshRate = 0;
 
 //Sixaxis
 bool motionControl = true;
-std::string leftJoyconMotionKeyCombo = "LEFTSR+LSTICK";
-std::string rightJoyconMotionKeyCombo = "RIGHTSL+RSTICK";
+std::string leftJoyconMotionKeyCombo = "ZL+L+LSTICK";
+std::string rightJoyconMotionKeyCombo = "ZR+R+RSTICK";
 std::string proControllerMotionKeyCombo = "ZR+R+RSTICK";
 
 enum Controller {
@@ -815,8 +815,6 @@ void formatButtonCombination(std::string& line) {
 		{"R", "\uE0E5"},
 		{"ZL", "\uE0E6"},
 		{"ZR", "\uE0E7"},
-		{"SL", "\uE0E8"},
-		{"SR", "\uE0E9"},
 		{"DUP", "\uE0EB"},
 		{"DDOWN", "\uE0EC"},
 		{"DLEFT", "\uE0ED"},
@@ -883,12 +881,6 @@ uint64_t MapButtons(const std::string& buttonCombo) {
 		{"DDOWN", HidNpadButton_Down},
 		{"DLEFT", HidNpadButton_Left},
 		{"DRIGHT", HidNpadButton_Right},
-		{"SL", HidNpadButton_AnySL},
-		{"SR", HidNpadButton_AnySR},
-		{"LEFTSL", HidNpadButton_LeftSL},
-		{"LEFTSR", HidNpadButton_LeftSR},
-		{"RIGHTSL", HidNpadButton_RightSL},
-		{"RIGHTSR", HidNpadButton_RightSR},
 		{"LSTICK", HidNpadButton_StickL},
 		{"RSTICK", HidNpadButton_StickR},
 		{"LS", HidNpadButton_StickL},

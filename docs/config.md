@@ -11,7 +11,7 @@ Colors are provided in RGBA4444 format, which means that each character represen
 
 | Key | Explanation | Possible values | Default Value |
 |-----|-------------|-----------------|---------------|
-| `key_combo` | Buttons combination that allows exiting Full, Mini, Micro, FPS Graph and FPS Counter modes; max 4 buttons, otherwise next buttons will be ignored. Combine different buttons with `+` | `A`, `B`, `X`, `Y`, `L`, `R`, `ZL`, `ZR`, `PLUS`, `MINUS`, `DUP`, `DDOWN`, `DLEFT`, `DRIGHT`, `SL`, `SR`, `LSTICK`, `RSTICK`, `UP`, `DOWN`, `LEFT`, `RIGHT` | `L+DDOWN+RSTICK` |
+| `key_combo` | Buttons combination that allows exiting Full, Mini, Micro, FPS Graph and FPS Counter modes; max 4 buttons, otherwise next buttons will be ignored. Combine different buttons with `+` | `A`, `B`, `X`, `Y`, `L`, `R`, `ZL`, `ZR`, `PLUS`, `MINUS`, `DUP`, `DDOWN`, `DLEFT`, `DRIGHT`, `LSTICK`, `RSTICK`, `UP`, `DOWN`, `LEFT`, `RIGHT` | `L+DDOWN+RSTICK` |
 | `battery_avg_iir_filter` | Read voltage + current averages directly from fuel gauge, that uses infinite impulse response filter | `true`, `false` | `false` |
 | `battery_time_left_refreshrate` | How many seconds must pass to refresh Battery Remaining Time | from `1` to `60` | `60` |
 | `average_gpu_load` | Average 5 last GPU load readings. Because GPU load by design shows only load for last 1/60s, this option allows for more accurate gpu load readings at the cost of slight bump in CPU Core #3 usage (from 2 to 4 percentage points depending on CPU clock). | `true`, `false` | `false` |
@@ -19,9 +19,9 @@ Colors are provided in RGBA4444 format, which means that each character represen
 | `use_old_fps_average` | Turn off rounding FPS average introduced in 1.2.2 release. | `true`, `false` | `false` |
 | `touch_screen` | Enable touch screen functionalities in various modes | `true`, `false` | `true` |
 | `motion_control` | Enable motion control in various modes, works only with wireless Joycons and Pro Controller | `true`, `false` | `true` |
-| `left_joycon_motion_key_combo` | Button combination that allows using motion control with data from left Joycon |  `A`, `B`, `X`, `Y`, `L`, `R`, `ZL`, `ZR`, `PLUS`, `MINUS`, `DUP`, `DDOWN`, `DLEFT`, `DRIGHT`, `SL`, `SR`, `LEFTSL`, `LEFTSR`, `RIGHTSL`, `RIGHTSL`, `LSTICK`, `RSTICK`, `UP`, `DOWN`, `LEFT`, `RIGHT` | `LEFTSR+LSTICK` |
-| `right_joycon_motion_key_combo` | Button combination that allows using motion control with data from right Joycon |  `A`, `B`, `X`, `Y`, `L`, `R`, `ZL`, `ZR`, `PLUS`, `MINUS`, `DUP`, `DDOWN`, `DLEFT`, `DRIGHT`, `SL`, `SR`, `LEFTSL`, `LEFTSR`, `RIGHTSL`, `RIGHTSL`, `LSTICK`, `RSTICK`, `UP`, `DOWN`, `LEFT`, `RIGHT` | `RIGHTSL+RSTICK` |
-| `pro_controller_motion_key_combo` | Button combination that allows using motion control with data from Pro Controller |  `A`, `B`, `X`, `Y`, `L`, `R`, `ZL`, `ZR`, `PLUS`, `MINUS`, `DUP`, `DDOWN`, `DLEFT`, `DRIGHT`, `SL`, `SR`, `LEFTSL`, `LEFTSR`, `RIGHTSL`, `RIGHTSL`, `LSTICK`, `RSTICK`, `UP`, `DOWN`, `LEFT`, `RIGHT` | `ZR+R+RSTICK` |
+| `left_joycon_motion_key_combo` | Button combination that allows using motion control with data from left Joycon |  `A`, `B`, `X`, `Y`, `L`, `R`, `ZL`, `ZR`, `PLUS`, `MINUS`, `DUP`, `DDOWN`, `DLEFT`, `DRIGHT`, `LSTICK`, `RSTICK`, `UP`, `DOWN`, `LEFT`, `RIGHT` | `ZL+L+LSTICK` |
+| `right_joycon_motion_key_combo` | Button combination that allows using motion control with data from right Joycon |  `A`, `B`, `X`, `Y`, `L`, `R`, `ZL`, `ZR`, `PLUS`, `MINUS`, `DUP`, `DDOWN`, `DLEFT`, `DRIGHT`, `LSTICK`, `RSTICK`, `UP`, `DOWN`, `LEFT`, `RIGHT` | `ZR+R+RSTICK` |
+| `pro_controller_motion_key_combo` | Button combination that allows using motion control with data from Pro Controller |  `A`, `B`, `X`, `Y`, `L`, `R`, `ZL`, `ZR`, `PLUS`, `MINUS`, `DUP`, `DDOWN`, `DLEFT`, `DRIGHT`, `LSTICK`, `RSTICK`, `UP`, `DOWN`, `LEFT`, `RIGHT` | `ZR+R+RSTICK` |
 
 > [full]
 
