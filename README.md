@@ -1,4 +1,6 @@
 # Status Monitor Overlay
+## Project discontinued, superseeded by https://github.com/masagrator/Status-Monitor-Deux
+
 Monitor Your hardware in real time!
 
 This is an overlay homebrew dedicated to Nintendo Switch.
