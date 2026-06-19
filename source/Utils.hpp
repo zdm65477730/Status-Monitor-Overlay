@@ -787,11 +787,6 @@ void EndFPSCounterThread() {
 	leventSignal(&threadexit);
 }
 
-Result hidsysSetAppletResourceUserId() {
-	u64 aruid = appletGetAppletResourceUserId();
-    return serviceDispatchIn(hidsysGetServiceSession(), 500, aruid);
-}
-
 // String formatting functions
 void removeSpaces(std::string& str) {
 	str.erase(std::remove(str.begin(), str.end(), ' '), str.end());
