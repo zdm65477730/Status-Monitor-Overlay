@@ -113,7 +113,7 @@ public:
 					if (settings.showTargetFreqs) {
 						renderer->drawString(GPU_Hz_c, false, COMMON_MARGIN, height_offset, 15, renderer->a(0xFFFF));
 					}
-					if (realCPU_Hz && settings.showRealFreqs) {
+					if (realGPU_Hz && settings.showRealFreqs) {
 						renderer->drawString(RealGPU_Hz_c, false, COMMON_MARGIN, height_offset - 15, 15, renderer->a(0xFFFF));
 						if (settings.showDeltas && settings.showTargetFreqs) {
 							renderer->drawString(DeltaGPU_c, false, COMMON_MARGIN + 170, height_offset - 7, 15, renderer->a(0xFFFF));
@@ -156,7 +156,7 @@ public:
 					else if (realRAM_Hz && settings.showDeltas && (settings.showRealFreqs || settings.showTargetFreqs)) {
 						renderer->drawString(DeltaRAM_c, false, COMMON_MARGIN + 170, height_offset, 15, renderer->a(0xFFFF));
 					}
-					if (R_SUCCEEDED(sysclkCheck)) {
+					if (R_SUCCEEDED(sysclkCheck) || R_SUCCEEDED(hocclkCheck)) {
 						renderer->drawString(RAM_load_c, false, COMMON_MARGIN, height_offset+15, 15, renderer->a(0xFFFF));
 					}
 				}
@@ -259,8 +259,8 @@ public:
 			RAM_Used_applet_f, RAM_Total_applet_f,
 			RAM_Used_system_f, RAM_Total_system_f,
 			RAM_Used_systemunsafe_f, RAM_Total_systemunsafe_f);
-
-		if (R_SUCCEEDED(sysclkCheck)) {
+		
+		if (R_SUCCEEDED(sysclkCheck) || R_SUCCEEDED(hocclkCheck)) {
 			int RAM_GPU_Load = ramLoad[SysClkRamLoad_All] - ramLoad[SysClkRamLoad_Cpu];
 			snprintf(RAM_load_c, sizeof RAM_load_c,
 				"UpdateRAMLoadFullOverlayCustomDrawerText"_tr.c_str(),
@@ -398,6 +398,7 @@ public:
 			if (delta < frametime) {
 				uint64_t time_delta = frametime - delta;
 				while (time_delta > 1000000) {
+					padUpdate(&pad);
 					if (__builtin_expect(isKeyComboPressed(padGetButtons(&pad), padGetButtonsDown(&pad), mappedButtons), false)) {
 						TeslaFPS = 0;
 						tsl::goBack();

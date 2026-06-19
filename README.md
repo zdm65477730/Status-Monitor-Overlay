@@ -1,4 +1,6 @@
 # Status Monitor Overlay
+## Project discontinued, superseeded by https://github.com/masagrator/Status-Monitor-Deux
+
 Monitor Your hardware in real time!
 
 This is an overlay homebrew dedicated to Nintendo Switch.
@@ -12,7 +14,7 @@ If it's not working in dock, you need to first start Status Monitor, then put Ni
 # What is currently supported:
 - CPU Usage for each core (Cores `#0`-`#2` are used by apps/games, Core `#3` is used by OS, background processes and also Tesla overlays)
 - GPU Load
-- CPU, GPU & RAM target frequencies (also real frequencies + RAM Load if [sys-clk 2.0.0_rc4+](https://github.com/retronx-team/sys-clk/releases) is installed, use only official RetroNX release for reliable results)
+- CPU, GPU & RAM target frequencies (also real frequencies + RAM Load if [sys-clk 2.0.0_rc4+](https://github.com/retronx-team/sys-clk/releases) or [Horizon OC 2.2.0+](https://github.com/Horizon-OC/Horizon-OC/releases) is installed, use only official RetroNX release for reliable results)
 - Used RAM categorized to: (not supported by FWs <5.0.0)
   - Total
   - Application
@@ -59,4 +61,4 @@ A: There are few possible explanations:
 
 Q: When opening Status Monitor overlays stop responding, or something that I am trying to open while Status Monitor is opened is freezing (f.e. Album or HB Menu). How to fix this?
 
-A: Issue comes from too much sysmodules accessing sdcard at once. You must limit amount of sysmodules that have such access (you can free one session by disabling logs in SaltyNX-Tool).
+A: This is related to SaltyNX, issue comes from too much sysmodules accessing sdcard at once. You must either update SaltyNX to at least 1.8.1 or limit amount of sysmodules that have such access (you can free one session by disabling logs in SaltyNX-Tool).

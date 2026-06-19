@@ -66,7 +66,7 @@
 	"UpdateNVENCMiscOverlayCustomDrawerText": "NVENC: %.1fMHz",
 	"UpdateNVJPGMiscOverlayCustomDrawerText": "NVJPG: %.1fMHz",
 	"GraphsMenuOverlayFrameText": "帧率",
-    "GraphsGraphsMenuListItemText": "图形",
+	"GraphsGraphsMenuListItemText": "图形",
 	"CounterGraphsMenuListItemText": "计数器",
 	"OtherMenuOverlayFrameText": "其它",
 	"BatteryOrChargerOtherMenuListItemText": "电池与充电器",

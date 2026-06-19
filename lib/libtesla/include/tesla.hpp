@@ -2942,6 +2942,8 @@ extern "C" {
 	u32  __nx_nv_transfermem_size = 0x40000;
 	ViLayerFlags __nx_vi_stray_layer_flags = (ViLayerFlags)0;
 
+	u32 __nx_fs_num_sessions = 1;
+
 	/**
 	 * @brief libtesla service initializing function to override libnx's
 	 * 
