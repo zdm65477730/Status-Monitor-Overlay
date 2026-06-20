@@ -27,7 +27,7 @@ private:
 	bool reachedMaxX = false;
 public:
 	bool isStarted = false;
-	com_FPSGraph() {
+    com_FPSGraph() { 
 		tsl::hlp::doWithSDCardHandle([this] {
 			GetConfigSettings(&settings);
 		});
@@ -103,10 +103,11 @@ public:
 	s16 y_60FPS = rectangle_y;
 	bool isAbove = false;
 
-	virtual tsl::elm::Element* createUI() override {
+    virtual tsl::elm::Element* createUI() override {
 		rootFrame = new tsl::elm::OverlayFrame("", "");
 
 		auto Status = new tsl::elm::CustomDrawer([this](tsl::gfx::Renderer *renderer, u16 x, u16 y, u16 w, u16 h) {
+
 			if (refreshRate && refreshRate < 240) {
 				rectangle_height = refreshRate;
 				rectangle_range_max = refreshRate;
@@ -136,7 +137,7 @@ public:
 
 			static int base_x = 0;
 			static int base_y = 0;
-
+			
 			if (!changedPos) switch(settings.setPos) {
 				case 0:
 					base_x = 0;
@@ -239,7 +240,7 @@ public:
 			renderer->drawString(&legend_min[0], false, base_x+(rectangle_x-10), base_y+(rectangle_y+rectangle_height+3), 10, renderer->a(settings.minFPSTextColor));
 
 			size_t last_element = readings.size() - 1;
-
+			
 			s16 offset = 0;
 			if (refreshRate >= 100) offset = 7;
 
@@ -250,9 +251,9 @@ public:
 				}
 				else if (y_on_range > range) {
 					isAbove = true;
-					y_on_range = range;
+					y_on_range = range; 
 				}
-
+				
 				s16 y = rectangle_y + static_cast<s16>(std::lround((float)rectangle_height * ((float)(range - y_on_range) / (float)range))); // 320 + (80 * ((61 - 61)/61)) = 320
 				auto colour = renderer->a(settings.mainLineColor);
 				if (y == y_old && !isAbove && readings[last_element].zero_rounded) {
@@ -267,11 +268,11 @@ public:
 				}
 				/*
 				else if (y - y_old > 0) {
-					if (y_old + 1 <= rectangle_y+rectangle_height)
+					if (y_old + 1 <= rectangle_y+rectangle_height) 
 						y_old += 1;
 				}
 				else if (y - y_old < 0) {
-					if (y_old - 1 >= rectangle_y)
+					if (y_old - 1 >= rectangle_y) 
 						y_old -= 1;
 				}
 				*/
@@ -320,12 +321,12 @@ public:
 				lastFrame = 0;
 			}
 			FPSavg_c[0] = 0;
-		}	
+		}
+		
 	}
-
 	virtual bool handleInput(uint64_t keysDown, uint64_t keysHeld, const HidTouchState &touchPos, HidAnalogStickState leftJoyStick, HidAnalogStickState rightJoyStick) override {
 		bool m_touchScreen = touchScreen;
-		if (__builtin_expect(m_touchScreen, false)) {
+		if (__builtin_expect(m_touchScreen && (sixaxisChangingPos == false), false)) {
 			if (touchPos.delta_time != 0 && (touchPos.x >= m_base_x && touchPos.x <= (m_base_x + m_width)) && (touchPos.y >= m_base_y && touchPos.y <= (m_base_y + m_height))) {
 				changingPos = true;
 				changedPos = true;

@@ -31,7 +31,7 @@ private:
 	uint64_t systemtickfrequency_impl = systemtickfrequency;
 	uint64_t frametime = 1000000000 / 60;
 public:
-	MicroOverlay() {
+    MicroOverlay() { 
 		tsl::hlp::doWithSDCardHandle([this] {
 			GetConfigSettings(&settings);
 		});
@@ -54,12 +54,12 @@ public:
 		idletick3 = systemtickfrequency_impl;
 		IsFrameBackground = false;
 		deactivateOriginalFooter = true;
-		StartThreads(NULL);
+        StartThreads(NULL);
 	}
 	~MicroOverlay() {
 		CloseThreads();
 	}
-
+    
     virtual tsl::elm::Element* createUI() override {
 		rootFrame = new tsl::elm::OverlayFrame("", "");
 
@@ -234,20 +234,20 @@ public:
 			}
 		}
 		if (settings.realFrequencies && realCPU_Hz) {
-			snprintf(CPU_compressed_c, sizeof CPU_compressed_c,
-				"[%s,%s,%s,%s]%s%d.%d",
-				CPU_Usage0, CPU_Usage1, CPU_Usage2, CPU_Usage3,
-				difference,
+			snprintf(CPU_compressed_c, sizeof CPU_compressed_c, 
+				"[%s,%s,%s,%s]%s%d.%d", 
+				CPU_Usage0, CPU_Usage1, CPU_Usage2, CPU_Usage3, 
+				difference, 
 				realCPU_Hz / 1000000, (realCPU_Hz / 100000) % 10);
 		}
 		else {
-			snprintf(CPU_compressed_c, sizeof CPU_compressed_c,
-				"[%s,%s,%s,%s]%s%d.%d",
-				CPU_Usage0, CPU_Usage1, CPU_Usage2, CPU_Usage3,
-				difference,
+			snprintf(CPU_compressed_c, sizeof CPU_compressed_c, 
+				"[%s,%s,%s,%s]%s%d.%d", 
+				CPU_Usage0, CPU_Usage1, CPU_Usage2, CPU_Usage3, 
+				difference, 
 				CPU_Hz / 1000000, (CPU_Hz / 100000) % 10);
 		}
-
+		
 		///GPU
 		if (realGPU_Hz) {
 			int32_t deltaGPU = (int32_t)(realGPU_Hz / 1000) - (GPU_Hz / 1000);
@@ -268,20 +268,20 @@ public:
 			strcpy(difference, "@");
 		}
 		if (settings.realFrequencies && realGPU_Hz) {
-			snprintf(GPU_Load_c, sizeof GPU_Load_c,
-				"%d.%d%%%s%d.%d",
-				GPU_Load_u / 10, GPU_Load_u % 10,
-				difference,
+			snprintf(GPU_Load_c, sizeof GPU_Load_c, 
+				"%d.%d%%%s%d.%d", 
+				GPU_Load_u / 10, GPU_Load_u % 10, 
+				difference, 
 				realGPU_Hz / 1000000, (realGPU_Hz / 100000) % 10);
 		}
 		else {
-			snprintf(GPU_Load_c, sizeof GPU_Load_c,
-				"%d.%d%%%s%d.%d",
-				GPU_Load_u / 10, GPU_Load_u % 10,
-				difference,
+			snprintf(GPU_Load_c, sizeof GPU_Load_c, 
+				"%d.%d%%%s%d.%d", 
+				GPU_Load_u / 10, GPU_Load_u % 10, 
+				difference, 
 				GPU_Hz / 1000000, (GPU_Hz / 100000) % 10);
 		}
-
+		
 		///RAM
 		char MICRO_RAM_all_c[12] = "";
 		if (!settings.showRAMLoad || (R_FAILED(sysclkCheck) && R_FAILED(hocclkCheck))) {
@@ -320,16 +320,16 @@ public:
 			strcpy(difference, "@");
 		}
 		if (settings.realFrequencies && realRAM_Hz) {
-			snprintf(RAM_var_compressed_c, sizeof RAM_var_compressed_c,
-				"%s%s%d.%d",
+			snprintf(RAM_var_compressed_c, sizeof RAM_var_compressed_c, 
+				"%s%s%d.%d", 
 				MICRO_RAM_all_c, difference, realRAM_Hz / 1000000, (realRAM_Hz / 100000) % 10);
 		}
 		else {
-			 snprintf(RAM_var_compressed_c, sizeof RAM_var_compressed_c,
-				"%s%s%d.%d",
+			 snprintf(RAM_var_compressed_c, sizeof RAM_var_compressed_c, 
+				"%s%s%d.%d", 
 				MICRO_RAM_all_c, difference, RAM_Hz / 1000000, (RAM_Hz / 1000000) % 10);
 		}
-
+		
 		char remainingBatteryLife[8];
 		mutexLock(&mutex_BatteryChecker);
 		if (batTimeEstimate >= 0) {
@@ -345,7 +345,7 @@ public:
 			PowerConsumption, remainingBatteryLife);
 		mutexUnlock(&mutex_BatteryChecker);
 		snprintf(Rotation_SpeedLevel_c, sizeof Rotation_SpeedLevel_c, "%2.1f%%", Rotation_Duty);
-
+		
 		///FPS
 		float m_FPSavg = useOldFPSavg ? FPSavg_old : FPSavg;
 		if (m_FPSavg <= 0.f || m_FPSavg >= 1000.f || m_FPSavg == 254.f) {
@@ -355,7 +355,7 @@ public:
 
 		mutexUnlock(&mutex_Misc);
 	}
-
+	
 	virtual bool handleInput(uint64_t keysDown, uint64_t keysHeld, const HidTouchState &touchPos, HidAnalogStickState leftJoyStick, HidAnalogStickState rightJoyStick) override {
 		if (!TeslaFPS) TeslaFPS = settings.refreshRate;
 		static uint64_t last_time = 0;

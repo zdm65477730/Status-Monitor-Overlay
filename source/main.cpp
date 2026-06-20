@@ -114,9 +114,9 @@ void InitTrans() {
 //Graphs
 class GraphsMenu : public tsl::Gui {
 public:
-	GraphsMenu() {}
+    GraphsMenu() {}
 
-	virtual tsl::elm::Element* createUI() override {
+    virtual tsl::elm::Element* createUI() override {
 		rootFrame = new tsl::elm::OverlayFrame("PluginName"_tr, "GraphsMenuOverlayFrameText"_tr);
 		auto list = new tsl::elm::List();
 
@@ -163,9 +163,9 @@ public:
 //Other
 class OtherMenu : public tsl::Gui {
 public:
-	OtherMenu() { }
+    OtherMenu() { }
 
-	virtual tsl::elm::Element* createUI() override {
+    virtual tsl::elm::Element* createUI() override {
 		rootFrame = new tsl::elm::OverlayFrame("PluginName"_tr, "OtherMenuOverlayFrameText"_tr);
 		auto list = new tsl::elm::List();
 
@@ -224,9 +224,9 @@ public:
 //Main Menu
 class MainMenu : public tsl::Gui {
 public:
-	MainMenu() {}
+    MainMenu() {}
 
-	virtual tsl::elm::Element* createUI() override {
+    virtual tsl::elm::Element* createUI() override {
 		rootFrame = new tsl::elm::OverlayFrame("PluginName"_tr, APP_VERSION);
 		auto list = new tsl::elm::List();
 		
@@ -248,6 +248,7 @@ public:
 			return false;
 		});
 		list->addItem(Mini);
+
 		bool fileExist = false;
 		tsl::hlp::doWithSDCardHandle([&fileExist] {
 			FILE* test = fopen(std::string(folderpath + filename).c_str(), "rb");
@@ -320,10 +321,11 @@ public:
 
 class MonitorOverlay : public tsl::Overlay {
 public:
+
 	virtual void initServices() override {
 		InitTrans();
 		//Initialize services
-		tsl::hlp::doWithSmSession([this] {
+		tsl::hlp::doWithSmSession([this]{
 
 			apmInitialize();
 			if (hosversionAtLeast(8,0,0)) clkrstCheck = clkrstInitialize();
@@ -390,16 +392,17 @@ public:
 		apmExit();
 	}
 
-	virtual void onShow() override {}    // Called before overlay wants to change from invisible to visible state
-	virtual void onHide() override {}    // Called before overlay wants to change from visible to invisible state
+    virtual void onShow() override {}    // Called before overlay wants to change from invisible to visible state
+    virtual void onHide() override {}    // Called before overlay wants to change from visible to invisible state
 
-	virtual std::unique_ptr<tsl::Gui> loadInitialGui() override {
-		return initially<MainMenu>();  // Initial Gui to load. It's possible to pass arguments to it's constructor like this
-	}
+    virtual std::unique_ptr<tsl::Gui> loadInitialGui() override {
+        return initially<MainMenu>();  // Initial Gui to load. It's possible to pass arguments to it's constructor like this
+    }
 };
 
 class MicroMode : public tsl::Overlay {
 public:
+
 	virtual void initServices() override {
 		InitTrans();
 		//Initialize services
@@ -470,13 +473,15 @@ public:
 		apmExit();
 	}
 
-	virtual void onShow() override {}    // Called before overlay wants to change from invisible to visible state
-	virtual void onHide() override {}    // Called before overlay wants to change from visible to invisible state
+    virtual void onShow() override {}    // Called before overlay wants to change from invisible to visible state
+    virtual void onHide() override {}    // Called before overlay wants to change from visible to invisible state
 
-	virtual std::unique_ptr<tsl::Gui> loadInitialGui() override {
-		return initially<MicroOverlay>();  // Initial Gui to load. It's possible to pass arguments to it's constructor like this
-	}
+    virtual std::unique_ptr<tsl::Gui> loadInitialGui() override {
+        return initially<MicroOverlay>();  // Initial Gui to load. It's possible to pass arguments to it's constructor like this
+    }
 };
+
+
 
 // This function gets called on startup to create a new Overlay object
 int main(int argc, char **argv) {
@@ -511,7 +516,7 @@ int main(int argc, char **argv) {
 			});
 			return tsl::loop<MicroMode>(argc, argv);
 		} else if (strcasecmp(argv[arg], "--microOverlay") == 0) {
-			skipMain = true;
+            skipMain = true;
 			framebufferWidth = 1280;
 			framebufferHeight = 28;
 			tsl::hlp::doWithSDCardHandle([] {
@@ -531,5 +536,5 @@ int main(int argc, char **argv) {
 			return tsl::loop<MicroMode>(argc, argv);
 		}
 	}
-	return tsl::loop<MonitorOverlay>(argc, argv);
+    return tsl::loop<MonitorOverlay>(argc, argv);
 }

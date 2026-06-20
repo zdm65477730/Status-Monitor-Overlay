@@ -2,7 +2,7 @@ class BatteryOverlay : public tsl::Gui {
 private:
 	char Battery_c[512];
 public:
-	BatteryOverlay() {
+    BatteryOverlay() {
 		mutexInit(&mutex_BatteryChecker);
 		StartBatteryThread();
 	}
@@ -10,7 +10,7 @@ public:
 		CloseThreads();
 	}
 
-	virtual tsl::elm::Element* createUI() override {
+    virtual tsl::elm::Element* createUI() override {
 		rootFrame = new tsl::elm::OverlayFrame("PluginName"_tr, APP_VERSION);
 
 		auto Status = new tsl::elm::CustomDrawer([this](tsl::gfx::Renderer *renderer, u16 x, u16 y, u16 w, u16 h) {
@@ -24,7 +24,9 @@ public:
 	}
 
 	virtual void update() override {
+
 		///Battery
+
 		mutexLock(&mutex_BatteryChecker);
 		char tempBatTimeEstimate[8] = "-:--";
 		if (batTimeEstimate >= 0) {
@@ -65,10 +67,10 @@ public:
 				tempBatTimeEstimate
 			);
 		mutexUnlock(&mutex_BatteryChecker);
+		
 	}
-
 	virtual bool handleInput(uint64_t keysDown, uint64_t keysHeld, const HidTouchState &touchPos, HidAnalogStickState leftJoyStick, HidAnalogStickState rightJoyStick) override {
-		if (keysHeld & HidNpadButton_B) {
+		if (keysDown & HidNpadButton_B) {
 			tsl::goBack();
 			return true;
 		}

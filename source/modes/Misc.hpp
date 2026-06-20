@@ -18,7 +18,7 @@ private:
 	char NVJPG_Hz_c[18];
 	char Nifm_pass[96];
 public:
-	MiscOverlay() {
+    MiscOverlay() { 
 		smInitialize();
 		nifmCheck = nifmInitialize(NifmServiceType_Admin);
 		if (R_SUCCEEDED(mmuInitialize())) {
@@ -27,7 +27,7 @@ public:
 			nvjpgCheck = mmuRequestInitialize(&nvjpgRequest, MmuModuleId(7), 8, false);
 		}
 
-		if (R_SUCCEEDED(audsnoopInitialize()))
+		if (R_SUCCEEDED(audsnoopInitialize())) 
 			audsnoopCheck = audsnoopEnableDspUsageMeasurement();
 
 		smExit();
@@ -47,11 +47,11 @@ public:
 		audsnoopExit();
 	}
 
-	virtual tsl::elm::Element* createUI() override {
+    virtual tsl::elm::Element* createUI() override {
 		rootFrame = new tsl::elm::OverlayFrame("PluginName"_tr, APP_VERSION);
 
 		auto Status = new tsl::elm::CustomDrawer([this](tsl::gfx::Renderer *renderer, u16 x, u16 y, u16 w, u16 h) {
-
+			
 			///DSP
 			if (R_SUCCEEDED(audsnoopCheck)) {
 				renderer->drawString(DSP_Load_c, false, 20, 120, 20, renderer->a(0xFFFF));
@@ -86,6 +86,8 @@ public:
 				else
 					renderer->drawString("NetworkTypeNotConnectedMiscOverlayCustomDrawerText"_tr.c_str(), false, 20, 280, 18, renderer->a(0xFFFF));
 			}
+
+
 		});
 
 		rootFrame->setContent(Status);
@@ -114,7 +116,7 @@ public:
 		else {
 			memcpy(&pass_temp1, &(Nifm_profile.wireless_setting_data.passphrase[0]), 24);
 		}
-		snprintf(Nifm_pass, sizeof Nifm_pass, "%s\n%s\n%s", pass_temp1, pass_temp2, pass_temp3);
+		snprintf(Nifm_pass, sizeof Nifm_pass, "%s\n%s\n%s", pass_temp1, pass_temp2, pass_temp3);	
 	}
 
 	virtual bool handleInput(uint64_t keysDown, uint64_t keysHeld, const HidTouchState &touchPos, HidAnalogStickState leftJoyStick, HidAnalogStickState rightJoyStick) override {

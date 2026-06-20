@@ -80,8 +80,9 @@ public:
 
     virtual tsl::elm::Element* createUI() override {
 		rootFrame = new tsl::elm::OverlayFrame("", "");
-
+		
 		auto Status = new tsl::elm::CustomDrawer([this](tsl::gfx::Renderer *renderer, u16 x, u16 y, u16 w, u16 h) {
+			
 			static int base_y = 0;
 			static int base_x = 0;
 			if (!changedPos) switch(settings.setPos) {
@@ -122,7 +123,7 @@ public:
 					base_y = 520;
 					break;	
 			}
-
+			
 			bool ready = false;
 			if (gameStart && NxFps -> API >= 1) {
 				ready = true;

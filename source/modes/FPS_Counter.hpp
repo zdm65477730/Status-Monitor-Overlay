@@ -27,7 +27,7 @@ private:
 	bool reachedMaxY = false;
 	bool reachedMaxX = false;
 public:
-	com_FPS() {
+    com_FPS() { 
 		tsl::hlp::doWithSDCardHandle([this] {
 			GetConfigSettings(&settings);
 		});
@@ -81,13 +81,14 @@ public:
 		deactivateOriginalFooter = false;
 	}
 
-	virtual tsl::elm::Element* createUI() override {
+    virtual tsl::elm::Element* createUI() override {
 		rootFrame = new tsl::elm::OverlayFrame("", "");
 
 		auto Status = new tsl::elm::CustomDrawer([this](tsl::gfx::Renderer *renderer, u16 x, u16 y, u16 w, u16 h) {
 			auto dimensions = renderer->drawString(FPSavg_c, false, 0, fontsize, fontsize, renderer->a(0x0000));
 			size_t rectangleWidth = dimensions.first;
 			size_t margin = (fontsize / 8);
+
 			uint32_t width = rectangleWidth + margin;
 			uint32_t height = fontsize + (margin / 2);
 
@@ -98,7 +99,7 @@ public:
 
 			static int base_x = 0;
 			static int base_y = 0;
-
+		
 			if (!changedPos) switch(settings.setPos) {
 				case 0:
 					base_x = 0;
@@ -137,6 +138,7 @@ public:
 					base_y = 720 - (fontsize + (margin / 2));
 					break;
 			}
+
 			if (changingPos) {
 				base_x = touch_pos_x - layer_pos_x;
 				base_y = touch_pos_y;
@@ -209,14 +211,14 @@ public:
 			strcpy(FPSavg_c, "n/d");
 		}
 		else snprintf(FPSavg_c, sizeof FPSavg_c, "%2.1f", m_FPSavg);
+		
 	}
-
 	virtual bool handleInput(uint64_t keysDown, uint64_t keysHeld, const HidTouchState &touchPos, HidAnalogStickState leftJoyStick, HidAnalogStickState rightJoyStick) override {
 		bool m_touchScreen = touchScreen;
-		if (__builtin_expect(m_touchScreen, false)) {
+		if (__builtin_expect(m_touchScreen && (sixaxisChangingPos == false), false)) {
 			if (touchPos.delta_time != 0 && (touchPos.x >= m_base_x && touchPos.x <= (m_base_x + m_width)) && (touchPos.y >= m_base_y && touchPos.y <= (m_base_y + m_height))) {
-			changingPos = true;
-			changedPos = true;
+				changingPos = true;
+				changedPos = true;
 			}
 			else if (changingPos && touchPos.delta_time == 0) {
 				touch_pos_x = -1;

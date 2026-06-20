@@ -43,8 +43,8 @@ TARGET		:=	$(APP_TITLE)
 BUILD		:=	build
 SOURCES		:=	source
 INCLUDES	:=	include lib/Atmosphere-libs/libstratosphere/source/dmnt lib/Atmosphere-libs/libstratosphere/source lib/libtesla/include
-NO_ICON		:=  1
-#ROMFS		:=  romfs
+NO_ICON		:=	1
+#ROMFS		:=	romfs
 
 ifeq ($(RELEASE),)
 	APP_VERSION	:=	$(APP_VERSION)-$(shell git describe --always)
@@ -181,7 +181,6 @@ $(BUILD):
 #---------------------------------------------------------------------------------
 clean:
 	@rm -fr $(BUILD) $(TARGET).ovl $(TARGET).nro $(TARGET).nacp $(TARGET).elf $(CURDIR)/SdOut
-
 
 #---------------------------------------------------------------------------------
 else

@@ -61,7 +61,6 @@ extern "C" {
 }
 
 #include <stdlib.h>
-#include <json.hpp>
 #include <strings.h>
 #include <math.h>
 
@@ -78,7 +77,7 @@ extern "C" {
 #include <stack>
 #include <map>
 
-
+#include <json.hpp>
 #include "ini_funcs.hpp"
 
 
@@ -247,7 +246,7 @@ namespace tsl {
 			smExit();
 		}
 
-        /**
+		/**
          * @brief Wrapper for sd card access using stdio
          * @note Consider using raw fs calls instead as they are faster and need less space
          *
@@ -1040,7 +1039,7 @@ namespace tsl {
 				return { maxX - x, currY - y };
 			}
 
-            /**
+			/**
              * @brief Get the main frame button display string
              *
              * @return Main button display text
@@ -1073,7 +1072,7 @@ namespace tsl {
 				Renderer::s_opacity = opacity;
 			}
 
-            /**
+			/**
              * @brief Main frame button text
              */
             std::string m_MainFrameButtonText{"\uE0E1  Back     \uE0E0  OK"};

@@ -30,7 +30,7 @@ private:
 	std::string message = "Hold to Exit";
 	uint64_t frametime = 1000000000 / 60;
 public:
-    FullOverlay() {
+    FullOverlay() { 
 		tsl::hlp::doWithSDCardHandle([this] {
 			GetConfigSettings(&settings);
 		});
@@ -69,10 +69,11 @@ public:
 	resolutionCalls m_resolutionOutput[8] = {0};
 	uint8_t resolutionLookup = 0;
 
-	virtual tsl::elm::Element* createUI() override {
+    virtual tsl::elm::Element* createUI() override {
 		rootFrame = new tsl::elm::OverlayFrame("PluginName"_tr, APP_VERSION);
 
 		auto Status = new tsl::elm::CustomDrawer([this](tsl::gfx::Renderer *renderer, u16 x, u16 y, u16 w, u16 h) {
+			
 			//Print strings
 			///CPU
 			if (R_SUCCEEDED(clkrstCheck) || R_SUCCEEDED(pcvCheck)) {
@@ -99,10 +100,10 @@ public:
 				}
 				renderer->drawString(CPU_compressed_c, false, COMMON_MARGIN, height_offset + 30, 15, renderer->a(0xFFFF));
 			}
-
+			
 			///GPU
 			if (R_SUCCEEDED(clkrstCheck) || R_SUCCEEDED(pcvCheck) || R_SUCCEEDED(nvCheck)) {
-
+				
 				uint32_t height_offset = 320;
 				if (realGPU_Hz && settings.showRealFreqs) {
 					height_offset = 327;
@@ -110,8 +111,9 @@ public:
 
 				renderer->drawString("GPUUsageFullOverlayCustomDrawerText"_tr.c_str(), false, COMMON_MARGIN, 285, 20, renderer->a(0xFFFF));
 				if (R_SUCCEEDED(clkrstCheck) || R_SUCCEEDED(pcvCheck)) {
-					if (settings.showTargetFreqs) {
+					if (settings.showTargetFreqs) { 
 						renderer->drawString(GPU_Hz_c, false, COMMON_MARGIN, height_offset, 15, renderer->a(0xFFFF));
+
 					}
 					if (realGPU_Hz && settings.showRealFreqs) {
 						renderer->drawString(RealGPU_Hz_c, false, COMMON_MARGIN, height_offset - 15, 15, renderer->a(0xFFFF));
@@ -129,11 +131,12 @@ public:
 				if (R_SUCCEEDED(nvCheck)) {
 					renderer->drawString(GPU_Load_c, false, COMMON_MARGIN, height_offset + 15, 15, renderer->a(0xFFFF));
 				}
+				
 			}
-
+			
 			///RAM
 			if (R_SUCCEEDED(clkrstCheck) || R_SUCCEEDED(pcvCheck) || R_SUCCEEDED(Hinted)) {
-
+				
 				uint32_t height_offset = 410;
 				if (realRAM_Hz && settings.showRealFreqs) {
 					height_offset += 7;
@@ -166,7 +169,7 @@ public:
 					renderer->drawString(RAM_var_compressed_c, false, COMMON_MARGIN + dimensions.first, height_offset + 40, 15, renderer->a(0xFFFF));
 				}
 			}
-
+			
 			///Thermal
 			if (R_SUCCEEDED(i2cCheck) || R_SUCCEEDED(tcCheck) || R_SUCCEEDED(pwmCheck)) {
 				renderer->drawString("ThermalUsageFullOverlayCustomDrawerText"_tr.c_str(), false, 20, 550, 20, renderer->a(0xFFFF));
@@ -180,7 +183,7 @@ public:
 				}
 				if (R_SUCCEEDED(pwmCheck)) renderer->drawString(Rotation_SpeedLevel_c, false, COMMON_MARGIN, 635, 15, renderer->a(0xFFFF));
 			}
-
+			
 			///FPS
 			if (GameRunning) {
 				uint32_t width_offset = 150;
@@ -200,8 +203,9 @@ public:
 					renderer->drawString(readSpeed_c, false, COMMON_MARGIN + width_offset, height, 15, renderer->a(0xFFFF));
 				}
 			}
-
+			
 			renderer->drawString(message.c_str(), false, COMMON_MARGIN, 693, 23, renderer->a(0xFFFF));
+			
 		});
 
 		rootFrame->setContent(Status);
@@ -221,11 +225,11 @@ public:
 		mutexLock(&mutex_Misc);
 		snprintf(CPU_Hz_c, sizeof(CPU_Hz_c), "UpdateCPUTargetFrequencyFullOverlayCustomDrawerText"_tr.c_str(), CPU_Hz / 1000000, (CPU_Hz / 100000) % 10);
 		if (realCPU_Hz) {
-			snprintf(RealCPU_Hz_c, sizeof(RealCPU_Hz_c), "UpdateCPURealFrequencyFullOverlayCustomDrawerText"_tr.c_str(), realCPU_Hz / 1000000, (realCPU_Hz / 100000) % 10);
+			snprintf(RealGPU_Hz_c, sizeof(RealGPU_Hz_c), "UpdateGPURealFrequencyFullOverlayCustomDrawerText"_tr.c_str(), realGPU_Hz / 1000000, (realGPU_Hz / 100000) % 10);
 			int32_t deltaCPU = (int32_t)(realCPU_Hz / 1000) - (CPU_Hz / 1000);
 			snprintf(DeltaCPU_c, sizeof(DeltaCPU_c), "Δ %d.%u", deltaCPU / 1000, abs(deltaCPU / 100) % 10);
 		}
-
+		
 		///GPU
 		snprintf(GPU_Hz_c, sizeof GPU_Hz_c, "UpdateCPUTargetFrequencyFullOverlayCustomDrawerText"_tr.c_str(), GPU_Hz / 1000000, (GPU_Hz / 100000) % 10);
 		if (realGPU_Hz) {
@@ -234,7 +238,7 @@ public:
 			snprintf(DeltaGPU_c, sizeof(DeltaGPU_c), "Δ %d.%u", deltaGPU / 1000, abs(deltaGPU / 100) % 10);
 		}
 		snprintf(GPU_Load_c, sizeof GPU_Load_c, "UpdateGPULoadFullOverlayCustomDrawerText"_tr.c_str(), GPU_Load_u / 10, GPU_Load_u % 10);
-
+		
 		///RAM
 		snprintf(RAM_Hz_c, sizeof RAM_Hz_c, "UpdateCPUTargetFrequencyFullOverlayCustomDrawerText"_tr.c_str(), RAM_Hz / 1000000, (RAM_Hz / 100000) % 10);
 		if (realRAM_Hz) {
@@ -253,7 +257,7 @@ public:
 		float RAM_Used_systemunsafe_f = (float)RAM_Used_systemunsafe_u / 1024 / 1024;
 		float RAM_Used_all_f = RAM_Used_application_f + RAM_Used_applet_f + RAM_Used_system_f + RAM_Used_systemunsafe_f;
 
-		snprintf(RAM_var_compressed_c, sizeof(RAM_var_compressed_c), "%4.2f / %4.2fMB\n%4.2f / %4.2fMB\n%4.2f / %4.2fMB\n%4.2f / %4.2fMB\n%4.2f / %4.2fMB", 
+		snprintf(RAM_var_compressed_c, sizeof(RAM_var_compressed_c), "%4.2f / %4.2fMB\n%4.2f / %4.2fMB\n%4.2f / %4.2fMB\n%4.2f / %4.2fMB\n%4.2f / %4.2fMB",
 			RAM_Used_all_f, RAM_Total_all_f,
 			RAM_Used_application_f, RAM_Total_application_f,
 			RAM_Used_applet_f, RAM_Total_applet_f,
@@ -273,7 +277,7 @@ public:
 			"%2.1f\u00B0C\n%2.1f\u00B0C\n%2d.%d\u00B0C",
 			SOC_temperatureF, PCB_temperatureF, skin_temperaturemiliC / 1000, (skin_temperaturemiliC / 100) % 10);
 		snprintf(Rotation_SpeedLevel_c, sizeof Rotation_SpeedLevel_c, "UpdateFanRotationLevelFullOverlayCustomDrawerText"_tr.c_str(), Rotation_Duty);
-
+		
 		///FPS
 		if (settings.showFPS == true) {
 			float m_FPSavg = useOldFPSavg ? FPSavg_old : FPSavg;
@@ -339,7 +343,7 @@ public:
 							m_resolutionOutput[out_iter].width = m_resolutionViewportCalls[x].width;
 							m_resolutionOutput[out_iter].height = m_resolutionViewportCalls[x].height;
 							m_resolutionOutput[out_iter].calls = m_resolutionViewportCalls[x].calls;
-							out_iter++;
+							out_iter++;			
 						}
 						found = false;
 						if (out_iter == 8) break;
@@ -384,8 +388,8 @@ public:
 		else snprintf(remainingBatteryLife, sizeof remainingBatteryLife, "-:--");
 		snprintf(BatteryDraw_c, sizeof BatteryDraw_c, "UpdateBatteryPowerFlowFullOverlayCustomDrawerText"_tr.c_str(), PowerConsumption, remainingBatteryLife);
 		mutexUnlock(&mutex_BatteryChecker);
+		
 	}
-
 	virtual bool handleInput(uint64_t keysDown, uint64_t keysHeld, const HidTouchState &touchPos, HidAnalogStickState leftJoyStick, HidAnalogStickState rightJoyStick) override {
 		if (!TeslaFPS) TeslaFPS = settings.refreshRate;
 		static uint64_t last_time = 0;
