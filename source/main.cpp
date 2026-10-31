@@ -103,12 +103,14 @@ void InitTrans() {
 			"OtherMainMenuListItemText": "Other"
 		}
 	)";
-	fsdevMountSdmc();
+	// The card is mounted by __appInit() and stays mounted for the whole session, so only sm:
+	// is opened here (the translation layer opens set: on its own). Mounting and unmounting
+	// sdmc again here dropped the framework's mount, and every sdmc:/... access that followed
+	// failed afterwards.
 	std::string lanPath = std::string("sdmc:/switch/.overlays/lang/") + APPTITLE + "/";
 	tsl::hlp::doWithSmSession([&lanPath, &jsonStr]{
 		tsl::tr::InitTrans(lanPath, jsonStr);
 	});
-	fsdevUnmountDevice("sdmc");
 }
 
 //Graphs
